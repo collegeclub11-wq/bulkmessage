@@ -1,0 +1,11 @@
+# Node modules
+node_modules/
+
+# Local session credentials
+auth_data/
+
+# Local configuration
+.env
+
+# Logs
+*.log
