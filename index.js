@@ -33,7 +33,7 @@ app.get('/health', async (req, res) => {
   }
 });
 
-const PORT = process.env.NODE_PORT || 3000;
+const PORT = process.env.PORT || process.env.NODE_PORT || 3000;
 const server = http.createServer(app);
 
 // WebSocket Setup
