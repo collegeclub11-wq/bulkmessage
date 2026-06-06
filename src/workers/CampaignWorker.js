@@ -44,7 +44,7 @@ class CampaignWorker {
         const tenantInfo = tenants[0];
         if (tenantInfo.total_messages_sent >= tenantInfo.max_messages_limit) {
           console.warn(`Tenant ${campaign.tenant_id} has reached their message limit (${tenantInfo.max_messages_limit}). Campaign ${campaign.id} paused.`);
-          await db.execute('UPDATE bulk_campaigns SET status = \'paused\', error_details = \'Low balance: You need to renew your message limits.\' WHERE id = ?', [campaign.id]);
+          await db.execute('UPDATE bulk_campaigns SET status = \'paused\', error_details = \'Low balance: Please contact Sumit Jaiswal 7870603149\' WHERE id = ?', [campaign.id]);
           this.isPolling = false;
           return;
         }
