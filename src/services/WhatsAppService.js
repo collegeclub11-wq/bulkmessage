@@ -44,10 +44,22 @@ class WhatsAppService {
   }
 
   async updateSessionStatus(status) {
-    await db.execute(
-      'UPDATE whatsapp_sessions SET status = ?, last_connected = CASE WHEN ? = \'connected\' THEN NOW() ELSE last_connected END, last_disconnected = CASE WHEN ? = \'disconnected\' THEN NOW() ELSE last_disconnected END WHERE session_id = ?',
-      [status, status, status, this.sessionId]
-    );
+    if (status === 'connected') {
+      await db.execute(
+        'UPDATE whatsapp_sessions SET status = ?, last_connected = NOW() WHERE session_id = ?',
+        [status, this.sessionId]
+      );
+    } else if (status === 'disconnected') {
+      await db.execute(
+        'UPDATE whatsapp_sessions SET status = ?, last_disconnected = NOW() WHERE session_id = ?',
+        [status, this.sessionId]
+      );
+    } else {
+      await db.execute(
+        'UPDATE whatsapp_sessions SET status = ? WHERE session_id = ?',
+        [status, this.sessionId]
+      );
+    }
   }
 
   async updateMessageReceipt(msgId, status) {
