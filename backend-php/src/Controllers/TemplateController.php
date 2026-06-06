@@ -142,8 +142,14 @@ class TemplateController {
             return;
         }
 
-        Template::delete($tenant['id'], $templateId);
-        echo json_encode(['message' => 'Template deleted successfully']);
+        $ids = explode(',', $templateId);
+        foreach ($ids as $id) {
+            $id = trim($id);
+            if (!empty($id)) {
+                Template::delete($tenant['id'], $id);
+            }
+        }
+        echo json_encode(['message' => 'Templates deleted successfully']);
     }
 }
 ?>

@@ -122,11 +122,15 @@
     <div class="glass-panel">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
         <h2>Message Templates</h2>
-        <button onclick="openCreateTemplateModal()">Create Template</button>
+        <div style="display: flex; gap: 10px;">
+          <button style="background: #ea4335; display: none;" id="btn-bulk-delete-templates" onclick="bulkDeleteTemplates()">Delete Selected</button>
+          <button onclick="openCreateTemplateModal()">Create Template</button>
+        </div>
       </div>
       <table>
         <thead>
           <tr>
+            <th style="width: 40px;"><input type="checkbox" id="select-all-templates" onchange="toggleSelectAllTemplates(this)"></th>
             <th>Template Name</th>
             <th>Category</th>
             <th>Message Body</th>
