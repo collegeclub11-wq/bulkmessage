@@ -92,14 +92,8 @@ class WhatsAppService {
 
     const socketOptions = {
       auth: state,
-      version: version,
       printQRInTerminal: false,
-      browser: Browsers.macOS('Chrome'),
-      syncFullHistory: false,
-      markOnlineOnConnect: false,
-      logger: logger,
-      qrTimeout: 55000,
-      keepAliveIntervalMs: 25000
+      logger: logger
     };
 
     // Attach proxy agent if configured
