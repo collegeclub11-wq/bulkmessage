@@ -98,6 +98,27 @@ class WhatsAppService {
       const { connection, lastDisconnect, qr } = update;
       console.log(`Session ${this.sessionId} connection update: connection=${connection}, qr=${qr ? 'yes' : 'no'}`);
 
+      // Log status update details to the database JSON field for monitoring/debugging
+      try {
+        const statusDetails = {
+          connection: connection || null,
+          qr: qr ? 'available' : 'none',
+          timestamp: new Date().toISOString(),
+          error: lastDisconnect?.error ? {
+            message: lastDisconnect.error.message,
+            code: lastDisconnect.error.code,
+            statusCode: lastDisconnect?.error?.output?.statusCode,
+            details: lastDisconnect.error.stack || String(lastDisconnect.error)
+          } : null
+        };
+        await db.execute(
+          'UPDATE whatsapp_sessions SET connection_status = ? WHERE session_id = ?',
+          [JSON.stringify(statusDetails), this.sessionId]
+        );
+      } catch (dbErr) {
+        console.error('Failed to update connection_status in DB:', dbErr.message);
+      }
+
       if (qr) {
         try {
           console.log(`Generating QR code image for session ${this.sessionId}`);
