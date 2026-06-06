@@ -84,7 +84,7 @@ class WhatsAppService {
       auth: state,
       version: version,
       printQRInTerminal: false,
-      browser: Browsers.macOS('Desktop'),
+      browser: Browsers.macOS('Chrome'),
       syncFullHistory: false,
       markOnlineOnConnect: false,
       logger: logger,
