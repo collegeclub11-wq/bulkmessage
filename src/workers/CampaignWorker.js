@@ -50,25 +50,71 @@ class CampaignWorker {
         }
       }
 
-      // Retrieve first active connected WhatsApp session for this tenant
-      const [sessions] = await db.execute(
-        'SELECT session_id FROM whatsapp_sessions WHERE tenant_id = ? AND status = \'connected\' LIMIT 1',
+      // Retrieve all WhatsApp sessions for this tenant
+      const [dbSessions] = await db.execute(
+        'SELECT session_id, status FROM whatsapp_sessions WHERE tenant_id = ?',
         [campaign.tenant_id]
       );
 
-      if (sessions.length === 0) {
+      let activeSessionId = null;
+
+      for (const s of dbSessions) {
+        if (s.status === 'connected') {
+          activeSessionId = s.session_id;
+          break;
+        }
+      }
+
+      // If we don't have a connected session in DB, check the stable bot directly for all sessions of this tenant
+      if (!activeSessionId && dbSessions.length > 0) {
+        console.log(`No 'connected' status in DB for tenant ${campaign.tenant_id}. Checking stable bot for ${dbSessions.length} sessions...`);
+        for (const s of dbSessions) {
+          try {
+            const botUrl = `https://whatsappbackend-production-9e33.up.railway.app/status?sessionId=${encodeURIComponent(s.session_id)}`;
+            const response = await fetch(botUrl);
+            if (response.ok) {
+              const data = await response.json();
+              if (data && data.status === 'connected') {
+                console.log(`Session ${s.session_id} is connected on stable bot. Updating DB status to connected.`);
+                await db.execute(
+                  'UPDATE whatsapp_sessions SET status = \'connected\', qr_code = NULL, last_connected = NOW() WHERE session_id = ?',
+                  [s.session_id]
+                );
+                activeSessionId = s.session_id;
+                break;
+              }
+            }
+          } catch (fetchErr) {
+            console.error(`Failed to fetch status from stable bot for session ${s.session_id}:`, fetchErr.message);
+          }
+        }
+      }
+
+      if (!activeSessionId) {
         console.warn(`No connected session found for tenant ${campaign.tenant_id}. Campaign ${campaign.id} paused.`);
         await db.execute('UPDATE bulk_campaigns SET status = \'paused\', error_details = \'No connected WhatsApp session found\' WHERE id = ?', [campaign.id]);
         this.isPolling = false;
         return;
       }
 
-      const sessionId = sessions[0].session_id;
+      const sessionId = activeSessionId;
       const key = `${campaign.tenant_id}_${sessionId}`;
-      const session = activeSessions.get(key);
+      let session = activeSessions.get(key);
 
-      if (!session || !session.isConnected) {
-        console.warn(`Session ${sessionId} is registered as connected but active class instance is offline. Re-initializing...`);
+      const WhatsAppService = require('../services/WhatsAppService');
+
+      if (!session) {
+        console.log(`Session ${sessionId} not found in active Map. Creating new class instance...`);
+        session = new WhatsAppService(campaign.tenant_id, sessionId);
+        activeSessions.set(key, session);
+        await session.initialize();
+      } else if (!session.isConnected) {
+        console.log(`Session ${sessionId} is offline in Map. Re-verifying status...`);
+        await session.initialize();
+      }
+
+      if (!session.isConnected) {
+        console.warn(`Session ${sessionId} is still offline after check. Skipping campaign iteration.`);
         this.isPolling = false;
         return;
       }
