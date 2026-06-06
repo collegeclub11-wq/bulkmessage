@@ -58,11 +58,12 @@ class WhatsAppController {
             return;
         }
 
-        // Trigger node boot if session is in pending state
-        if ($session['status'] === 'pending' || $session['status'] === 'disconnected') {
+        // Trigger node boot if session is not connected to ensure socket is alive and listening
+        if ($session['status'] !== 'connected') {
             $this->pingNodeServiceInit($tenant['id'], $sessionId);
-            // Update local status representation temporarily
-            $session['status'] = 'scanning';
+            if ($session['status'] === 'pending' || $session['status'] === 'disconnected') {
+                $session['status'] = 'scanning';
+            }
         }
 
         echo json_encode([
