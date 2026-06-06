@@ -20,8 +20,22 @@ class SessionController {
 
     const key = `${tenant_id}_${session_id}`;
     if (activeSessions.has(key)) {
-      console.log(`Session already in Map list: ${key}`);
-      return res.json({ message: 'Session is already starting or active', session_id });
+      const existing = activeSessions.get(key);
+      if (existing.isConnected) {
+        console.log(`Session already in Map list and is connected: ${key}`);
+        return res.json({ message: 'Session is already starting or active', session_id });
+      } else {
+        console.log(`Session ${key} exists in Map but is not connected. Closing and clearing to re-init.`);
+        try {
+          if (existing.sock) {
+            existing.sock.end();
+            existing.sock.ev.removeAllListeners();
+          }
+        } catch (e) {
+          console.warn('Error closing existing socket in Map reset:', e.message);
+        }
+        activeSessions.delete(key);
+      }
     }
 
     console.log(`Creating new WhatsAppService instance for key: ${key}`);

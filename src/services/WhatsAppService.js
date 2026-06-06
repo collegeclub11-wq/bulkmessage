@@ -35,10 +35,33 @@ class WhatsAppService {
 
     const authDir = `./auth_data/tenant_${this.tenantId}/session_${this.sessionId}`;
     const fs = require('fs');
-    const credsPath = `${authDir}/creds.json`;
-    if (!fs.existsSync(credsPath)) {
-      console.log(`creds.json not found. Purging session auth directory to start clean: ${authDir}`);
+    
+    // Check if session has ever been connected
+    let isPreviouslyConnected = false;
+    try {
+      const [rows] = await db.execute(
+        'SELECT status, phone_number FROM whatsapp_sessions WHERE session_id = ? AND tenant_id = ?',
+        [this.sessionId, this.tenantId]
+      );
+      if (rows && rows.length > 0) {
+        const row = rows[0];
+        if (row.phone_number && row.status !== 'pending' && row.status !== 'scanning') {
+          isPreviouslyConnected = true;
+        }
+      }
+    } catch (dbErr) {
+      console.warn('Error querying session status from DB:', dbErr.message);
+    }
+
+    if (!isPreviouslyConnected) {
+      console.log(`Session has no previous successful connection. Purging auth directory to start clean: ${authDir}`);
       await this.cleanAuth();
+    } else {
+      const credsPath = `${authDir}/creds.json`;
+      if (!fs.existsSync(credsPath)) {
+        console.log(`creds.json not found. Purging session auth directory to start clean: ${authDir}`);
+        await this.cleanAuth();
+      }
     }
 
     const logger = Pino({ level: 'warn' });
