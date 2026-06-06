@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS tenants (
     rate_limit_per_hour INT DEFAULT 200,
     rate_limit_per_day INT DEFAULT 1000,
     messages_sent_today INT DEFAULT 0,
+    total_messages_sent INT DEFAULT 0,
+    max_messages_limit INT DEFAULT 1000,
     last_reset_date DATE,
     status ENUM('active', 'suspended', 'expired') DEFAULT 'active',
     settings JSON DEFAULT NULL,

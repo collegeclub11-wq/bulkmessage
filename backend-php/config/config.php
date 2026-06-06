@@ -10,9 +10,11 @@ if (file_exists($envFile)) {
         list($name, $value) = explode('=', $line, 2);
         $name = trim($name);
         $value = trim($value);
-        putenv("$name=$value");
-        $_ENV[$name] = $value;
-        $_SERVER[$name] = $value;
+        if (!getenv($name)) {
+            putenv("$name=$value");
+            $_ENV[$name] = $value;
+            $_SERVER[$name] = $value;
+        }
     }
 }
 

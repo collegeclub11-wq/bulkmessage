@@ -72,16 +72,20 @@ class WhatsAppController {
     }
 
     private function pingNodeServiceInit($tenantId, $sessionId) {
-        $host = $_ENV['NODE_HOST'] ?? $_SERVER['NODE_HOST'] ?? getenv('NODE_HOST') ?: '127.0.0.1';
-        $port = $_ENV['NODE_PORT'] ?? $_SERVER['NODE_PORT'] ?? getenv('NODE_PORT') ?: '3000';
+        $host = getenv('NODE_HOST') ?: '127.0.0.1';
+        $port = getenv('NODE_PORT');
         
         if (strpos($host, 'http://') === 0 || strpos($host, 'https://') === 0) {
-            $nodeUrl = rtrim($host, '/') . '/api/session/init';
+            $nodeUrl = $host;
         } else {
-            $protocol = (strpos($host, '.') !== false && strpos($host, 'localhost') === false) ? 'https://' : 'http://';
-            $portSuffix = (!empty($port) && $port !== '80' && $port !== '443') ? ":$port" : "";
-            $nodeUrl = "$protocol$host$portSuffix/api/session/init";
+            $nodeUrl = "http://" . $host;
         }
+        
+        if (!empty($port)) {
+            $nodeUrl .= ":" . $port;
+        }
+        
+        $nodeUrl .= "/api/session/init";
         
         $payload = json_encode([
             'tenant_id' => $tenantId,
@@ -93,14 +97,9 @@ class WhatsAppController {
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 8); // slightly longer timeout to allow resolution
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 3); // short timeout
 
-        $res = curl_exec($ch);
-        if ($res === false) {
-            error_log("cURL Error: " . curl_error($ch) . " URL: " . $nodeUrl);
-        }
+        curl_exec($ch);
         curl_close($ch);
     }
 }

@@ -35,6 +35,21 @@ class CampaignWorker {
 
       const campaign = campaigns[0];
 
+      // Check tenant message limit balance
+      const [tenants] = await db.execute(
+        'SELECT max_messages_limit, total_messages_sent FROM tenants WHERE id = ?',
+        [campaign.tenant_id]
+      );
+      if (tenants.length > 0) {
+        const tenantInfo = tenants[0];
+        if (tenantInfo.total_messages_sent >= tenantInfo.max_messages_limit) {
+          console.warn(`Tenant ${campaign.tenant_id} has reached their message limit (${tenantInfo.max_messages_limit}). Campaign ${campaign.id} paused.`);
+          await db.execute('UPDATE bulk_campaigns SET status = \'paused\', error_details = \'Low balance: You need to renew your message limits.\' WHERE id = ?', [campaign.id]);
+          this.isPolling = false;
+          return;
+        }
+      }
+
       // Retrieve first active connected WhatsApp session for this tenant
       const [sessions] = await db.execute(
         'SELECT session_id FROM whatsapp_sessions WHERE tenant_id = ? AND status = \'connected\' LIMIT 1',
@@ -127,6 +142,12 @@ class CampaignWorker {
         );
 
         await this.incrementCampaignCounts(campaign.id, true);
+
+        // Increment total messages sent count for the tenant
+        await db.execute(
+          'UPDATE tenants SET total_messages_sent = total_messages_sent + 1 WHERE id = ?',
+          [campaign.tenant_id]
+        );
 
       } catch (sendErr) {
         console.error(`Campaign message transmission failed for ${target.phone_number}:`, sendErr.message);

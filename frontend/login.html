@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - WhatsApp Bulk Sender</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .login-container {
+      width: 100%;
+      max-width: 440px;
+    }
+    .login-logo {
+      text-align: center;
+      margin-bottom: 24px;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--primary-accent);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container glass-panel">
+    <div class="login-logo">🚀 WhatsApp Bulk Sender</div>
+    <h2 style="margin-bottom: 8px; text-align: center;">Welcome Back</h2>
+    <p style="color: var(--text-muted); text-align: center; margin-bottom: 24px; font-size: 14px;">Please authenticate to access your portal</p>
+    
+    <form id="login-form">
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; margin-bottom: 8px; font-size: 12px; font-weight: 600; text-transform: uppercase;">Tenant Key</label>
+        <input type="text" id="tenant-key" required placeholder="e.g. demo-corp-key">
+      </div>
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; margin-bottom: 8px; font-size: 12px; font-weight: 600; text-transform: uppercase;">Email Address</label>
+        <input type="email" id="email" required placeholder="admin@democorp.local">
+      </div>
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; margin-bottom: 8px; font-size: 12px; font-weight: 600; text-transform: uppercase;">Password</label>
+        <input type="password" id="password" required placeholder="••••••••">
+      </div>
+      
+      <div style="margin-bottom: 24px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+        <input type="checkbox" id="remember-tenant" checked style="width: auto; margin: 0; cursor: pointer;">
+        <label for="remember-tenant" style="font-size: 13px; color: var(--text-muted); cursor: pointer; user-select: none;">Remember Tenant Key</label>
+      </div>
+      
+      <button type="submit" style="width: 100%;">Sign In</button>
+    </form>
+    
+    <div id="login-error" style="color: var(--danger); text-align: center; margin-top: 16px; font-size: 14px; font-weight: 500;"></div>
+  </div>
+
+  <script src="assets/js/app.js"></script>
+  <script>
+    // Pre-populate tenant key on page load
+    function init() {
+      const savedTenantKey = localStorage.getItem('remembered_tenant_key');
+      if (savedTenantKey) {
+        document.getElementById('tenant-key').value = savedTenantKey;
+        document.getElementById('remember-tenant').checked = true;
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const tenant_key = document.getElementById('tenant-key').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const rememberTenant = document.getElementById('remember-tenant').checked;
+      const errorDiv = document.getElementById('login-error');
+      
+      errorDiv.innerText = '';
+
+      try {
+        const res = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tenant_key, email, password })
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+          throw new Error(data.error || 'Authentication failed');
+        }
+
+        localStorage.setItem('auth_token', data.token);
+        localStorage.setItem('tenant_key', tenant_key);
+        localStorage.setItem('user_role', data.user.role || 'sender');
+
+        if (rememberTenant) {
+          localStorage.setItem('remembered_tenant_key', tenant_key);
+        } else {
+          localStorage.removeItem('remembered_tenant_key');
+        }
+        
+        window.location.href = 'index.html';
+      } catch (err) {
+        errorDiv.innerText = err.message;
+      }
+    });
+  </script>
+</body>
+</html>

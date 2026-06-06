@@ -1,5 +1,21 @@
 // node-service/src/config/database.js
 const mysql = require('mysql2/promise');
+const fs = require('fs');
+const path = require('path');
+
+// Manually load environment variables from root .env if present
+const envPath = path.join(__dirname, '../../.env');
+if (fs.existsSync(envPath)) {
+  const envContent = fs.readFileSync(envPath, 'utf8');
+  envContent.split('\n').forEach(line => {
+    const trimmed = line.trim();
+    if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
+      const [key, ...valueParts] = trimmed.split('=');
+      const value = valueParts.join('=').trim();
+      process.env[key.trim()] = value;
+    }
+  });
+}
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST || '82.25.106.230',

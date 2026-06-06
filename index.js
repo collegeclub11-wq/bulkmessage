@@ -69,4 +69,10 @@ server.listen(PORT, () => {
 
   // Boot restore sessions
   ReconnectWorker.recoverSessions();
+
+  // Start Self-Healing diagnostics loop (every 30 seconds)
+  const selfHeal = require('./heal');
+  setInterval(() => {
+    selfHeal.run().catch(e => console.error('Self-healing error:', e.message));
+  }, 30000);
 });
