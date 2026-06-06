@@ -14,6 +14,11 @@ async function loadTemplates() {
       const tbody = document.getElementById('templates-tbody');
       tbody.innerHTML = '';
       
+      // Reset selection state on reload
+      const masterCheckbox = document.getElementById('select-all-templates');
+      if (masterCheckbox) masterCheckbox.checked = false;
+      updateBulkDeleteButtonVisibility();
+
       data.templates.forEach(t => {
         const tr = document.createElement('tr');
         
@@ -23,6 +28,7 @@ async function loadTemplates() {
         }
 
         tr.innerHTML = `
+          <td><input type="checkbox" class="template-checkbox" value="${t.id}" onchange="updateBulkDeleteButtonVisibility()"></td>
           <td><strong>${escapeHtml(t.name)}</strong>${mediaText}</td>
           <td><span class="badge" style="background: rgba(255,255,255,0.05);">${escapeHtml(t.category)}</span></td>
           <td><code style="font-size: 13px; color: var(--text-muted);">${escapeHtml(t.message)}</code></td>
@@ -37,6 +43,52 @@ async function loadTemplates() {
     }
   } catch (err) {
     console.error('Failed to load templates:', err);
+  }
+}
+
+function toggleSelectAllTemplates(master) {
+  const checkboxes = document.querySelectorAll('.template-checkbox');
+  checkboxes.forEach(cb => cb.checked = master.checked);
+  updateBulkDeleteButtonVisibility();
+}
+
+function updateBulkDeleteButtonVisibility() {
+  const checkboxes = document.querySelectorAll('.template-checkbox');
+  const selectedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+  const btn = document.getElementById('btn-bulk-delete-templates');
+  
+  if (btn) {
+    if (selectedCount > 0) {
+      btn.style.display = 'block';
+      btn.innerText = `Delete Selected (${selectedCount})`;
+    } else {
+      btn.style.display = 'none';
+    }
+  }
+}
+
+async function bulkDeleteTemplates() {
+  const checkboxes = document.querySelectorAll('.template-checkbox');
+  const selectedIds = Array.from(checkboxes)
+    .filter(cb => cb.checked)
+    .map(cb => cb.value);
+
+  if (selectedIds.length === 0) return;
+  if (!confirm(`Are you sure you want to delete ${selectedIds.length} selected template(s)?`)) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/templates?id=${selectedIds.join(',')}`, {
+      method: 'DELETE',
+      headers: getHeaders()
+    });
+    if (res.ok) {
+      loadTemplates();
+    } else {
+      const data = await res.json();
+      alert(data.error || 'Failed to delete selected templates');
+    }
+  } catch (err) {
+    console.error('Failed to bulk delete templates:', err);
   }
 }
 
@@ -70,4 +122,20 @@ async function deleteTemplate(id) {
   } catch (err) {
     console.error('Failed to delete template:', err);
   }
+}
+
+function insertVariable(inputId, variable) {
+  const textarea = document.getElementById(inputId);
+  if (!textarea) return;
+  
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const text = textarea.value;
+  
+  textarea.value = text.substring(0, start) + variable + text.substring(end);
+  textarea.focus();
+  
+  // Set cursor right after the variable
+  const newPos = start + variable.length;
+  textarea.setSelectionRange(newPos, newPos);
 }

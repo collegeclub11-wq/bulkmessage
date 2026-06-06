@@ -134,6 +134,8 @@ class SuperAdminController {
         if ($maxMessagesLimit !== null) {
             $fields[] = "max_messages_limit = ?";
             $params[] = $maxMessagesLimit;
+            // Reset sent count back to 0 when limit is updated/refilled
+            $fields[] = "total_messages_sent = 0";
         }
 
         if (empty($fields)) {
