@@ -103,8 +103,13 @@ class WhatsAppController {
 
         // Update database with latest status from bot
         $db = Database::getConnection();
-        $stmt = $db->prepare("UPDATE whatsapp_sessions SET status = ?, qr_code = ?, last_connected = CASE WHEN ? = 'connected' THEN NOW() ELSE last_connected END WHERE tenant_id = ? AND session_id = ?");
-        $stmt->execute([$status, $qrCode, $status, $tenant['id'], $sessionId]);
+        if ($status === 'connected') {
+            $stmt = $db->prepare("UPDATE whatsapp_sessions SET status = ?, qr_code = ?, last_connected = NOW() WHERE tenant_id = ? AND session_id = ?");
+            $stmt->execute([$status, $qrCode, $tenant['id'], $sessionId]);
+        } else {
+            $stmt = $db->prepare("UPDATE whatsapp_sessions SET status = ?, qr_code = ? WHERE tenant_id = ? AND session_id = ?");
+            $stmt->execute([$status, $qrCode, $tenant['id'], $sessionId]);
+        }
 
         echo json_encode([
             'status' => $status,
