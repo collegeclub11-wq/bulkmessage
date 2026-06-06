@@ -123,3 +123,19 @@ async function deleteTemplate(id) {
     console.error('Failed to delete template:', err);
   }
 }
+
+function insertVariable(inputId, variable) {
+  const textarea = document.getElementById(inputId);
+  if (!textarea) return;
+  
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const text = textarea.value;
+  
+  textarea.value = text.substring(0, start) + variable + text.substring(end);
+  textarea.focus();
+  
+  // Set cursor right after the variable
+  const newPos = start + variable.length;
+  textarea.setSelectionRange(newPos, newPos);
+}

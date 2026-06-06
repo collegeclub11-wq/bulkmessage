@@ -268,6 +268,11 @@
         <div style="margin-bottom: 16px;">
           <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Message Body</label>
           <textarea id="template-message-input" rows="4" required placeholder="Hello {{name}}, welcome to our service!"></textarea>
+          <div style="margin-top: 6px; font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
+            <span>Click to insert:</span>
+            <span class="badge" style="cursor: pointer; background: rgba(0, 229, 188, 0.15); color: #00e5bc; border: 1px dashed #00e5bc; padding: 2px 6px; border-radius: 4px;" onclick="insertVariable('template-message-input', '{{name}}')">{{name}} (Name)</span>
+            <span class="badge" style="cursor: pointer; background: rgba(0, 229, 188, 0.15); color: #00e5bc; border: 1px dashed #00e5bc; padding: 2px 6px; border-radius: 4px;" onclick="insertVariable('template-message-input', '{{phone}}')">{{phone}} (Phone)</span>
+          </div>
         </div>
         <div style="margin-bottom: 16px;">
           <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Image URL (Optional)</label>
@@ -305,6 +310,11 @@
         <div style="margin-bottom: 16px;">
           <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Message Body</label>
           <textarea id="edit-template-message-input" rows="4" required placeholder="Hello {{name}}, welcome to our service!"></textarea>
+          <div style="margin-top: 6px; font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
+            <span>Click to insert:</span>
+            <span class="badge" style="cursor: pointer; background: rgba(0, 229, 188, 0.15); color: #00e5bc; border: 1px dashed #00e5bc; padding: 2px 6px; border-radius: 4px;" onclick="insertVariable('edit-template-message-input', '{{name}}')">{{name}} (Name)</span>
+            <span class="badge" style="cursor: pointer; background: rgba(0, 229, 188, 0.15); color: #00e5bc; border: 1px dashed #00e5bc; padding: 2px 6px; border-radius: 4px;" onclick="insertVariable('edit-template-message-input', '{{phone}}')">{{phone}} (Phone)</span>
+          </div>
         </div>
         <div style="margin-bottom: 16px;">
           <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Image URL (Optional)</label>
