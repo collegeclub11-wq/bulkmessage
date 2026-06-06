@@ -27,7 +27,26 @@ app.post('/api/message/send', MessageController.send);
 app.get('/health', async (req, res) => {
   try {
     await db.query('SELECT 1');
-    res.json({ status: 'UP', database: 'connected' });
+    let baileysVersion = 'unknown';
+    try {
+      baileysVersion = require('@whiskeysockets/baileys/package.json').version;
+    } catch (err) {}
+    
+    let waVersion = 'unknown';
+    try {
+      const { fetchLatestBaileysVersion } = require('@whiskeysockets/baileys');
+      const latest = await fetchLatestBaileysVersion();
+      waVersion = latest.version.join('.');
+    } catch (err) {
+      waVersion = 'error: ' + err.message;
+    }
+
+    res.json({ 
+      status: 'UP', 
+      database: 'connected',
+      baileysVersion,
+      waVersion
+    });
   } catch (e) {
     res.status(500).json({ status: 'DOWN', database: e.message });
   }
