@@ -7,9 +7,9 @@ class ReconnectWorker {
   static async recoverSessions() {
     console.log('ReconnectWorker scan started: recovering disconnected or pending sessions...');
     try {
-      // Find sessions registered as connecting, connected, pending or disconnected
+      // Find sessions registered as connecting, connected, pending, scanning, or disconnected
       const [sessions] = await db.execute(
-        'SELECT tenant_id, session_id FROM whatsapp_sessions WHERE status IN (\'connecting\', \'connected\', \'disconnected\')'
+        'SELECT tenant_id, session_id FROM whatsapp_sessions WHERE status IN (\'connecting\', \'connected\', \'disconnected\', \'pending\', \'scanning\')'
       );
 
       for (const row of sessions) {

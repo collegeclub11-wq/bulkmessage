@@ -40,7 +40,7 @@ function log(msg) {
 // 1. Health check local Node Service on port 3000
 function checkNodeServicePort() {
   return new Promise((resolve) => {
-    const port = process.env.NODE_PORT || 3000;
+    const port = process.env.PORT || process.env.NODE_PORT || 3000;
     const req = http.get(`http://127.0.0.1:${port}/health`, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
@@ -131,7 +131,7 @@ async function healSessions() {
 
 function triggerSessionInit(tenantId, sessionId) {
   return new Promise((resolve) => {
-    const port = process.env.NODE_PORT || 3000;
+    const port = process.env.PORT || process.env.NODE_PORT || 3000;
     const payload = JSON.stringify({ tenant_id: tenantId, session_id: sessionId });
     
     const req = http.request({
