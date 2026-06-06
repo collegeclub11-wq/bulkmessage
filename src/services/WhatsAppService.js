@@ -6,6 +6,16 @@ const Pino = require('pino');
 const db = require('../config/database');
 const RateLimitService = require('./RateLimitService');
 const BanPreventionService = require('./BanPreventionService');
+const { HttpsProxyAgent } = require('https-proxy-agent');
+
+// Build proxy agent from env vars (supports QuotaGuard Static, Webshare, BrightData, etc.)
+const PROXY_URL = process.env.QUOTAGUARDSTATIC_URL || process.env.HTTPS_PROXY || process.env.HTTP_PROXY || null;
+const proxyAgent = PROXY_URL ? new HttpsProxyAgent(PROXY_URL) : null;
+if (proxyAgent) {
+  console.log('[Proxy] Routing WhatsApp WebSocket traffic through proxy:', PROXY_URL.replace(/:([^:@]{3})[^:@]*@/, ':$1***@'));
+} else {
+  console.warn('[Proxy] No proxy configured. WhatsApp may block Railway datacenter IP.');
+}
 
 class WhatsAppService {
   constructor(tenantId, sessionId) {
@@ -80,7 +90,7 @@ class WhatsAppService {
       console.warn('Failed to fetch latest Baileys version, using default static fallback:', e.message);
     }
 
-    this.sock = makeWASocket({
+    const socketOptions = {
       auth: state,
       version: version,
       printQRInTerminal: false,
@@ -90,7 +100,15 @@ class WhatsAppService {
       logger: logger,
       qrTimeout: 55000,
       keepAliveIntervalMs: 25000
-    });
+    };
+
+    // Attach proxy agent if configured
+    if (proxyAgent) {
+      socketOptions.agent = proxyAgent;
+      socketOptions.fetchAgent = proxyAgent;
+    }
+
+    this.sock = makeWASocket(socketOptions);
 
     this.sock.ev.on('creds.update', saveCreds);
 
