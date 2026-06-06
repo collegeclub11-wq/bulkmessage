@@ -37,6 +37,24 @@ class WhatsAppController {
         ]);
     }
 
+    public function deleteSession() {
+        $tenant = TenantMiddleware::getTenantDetails();
+        $input = json_decode(file_get_contents('php://input'), true);
+        $sessionId = $input['session_id'] ?? null;
+
+        if (!$sessionId) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing session_id']);
+            return;
+        }
+
+        $db = Database::getConnection();
+        $stmt = $db->prepare("DELETE FROM whatsapp_sessions WHERE tenant_id = ? AND session_id = ?");
+        $stmt->execute([$tenant['id'], $sessionId]);
+
+        echo json_encode(['message' => 'Session deleted successfully']);
+    }
+
     public function getQR() {
         $tenant = TenantMiddleware::getTenantDetails();
         $sessionId = $_GET['session_id'] ?? null;
