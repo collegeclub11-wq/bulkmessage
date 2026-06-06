@@ -25,6 +25,10 @@ async function loadCampaigns() {
           actionBtn = `<button class="secondary" style="padding: 4px 8px; font-size: 11px; border-color: orange; color: orange;" onclick="pauseCampaign(${c.id})">Pause</button>`;
         }
 
+        const errorHtml = c.error_details 
+          ? `<br><span style="font-size: 10px; color: #ff6b6b; display: block; margin-top: 4px; max-width: 150px; white-space: normal; word-break: break-word;">${escapeHtml(c.error_details)}</span>` 
+          : '';
+
         tr.innerHTML = `
           <td><strong>${escapeHtml(c.campaign_name)}</strong></td>
           <td>${escapeHtml(c.template_name || 'N/A')}</td>
@@ -37,7 +41,10 @@ async function loadCampaigns() {
             <span style="font-size: 11px; color: var(--text-muted);">${progressPercent}% (${c.sent_count}/${c.total_contacts})</span>
             <br><span style="font-size: 11px; color: var(--primary-accent); font-weight: 500;">Est. Time: ${estTime}</span>
           </td>
-          <td><span class="badge ${c.status === 'completed' ? 'success' : 'warning'}">${c.status.toUpperCase()}</span></td>
+          <td>
+            <span class="badge ${c.status === 'completed' ? 'success' : 'warning'}">${c.status.toUpperCase()}</span>
+            ${errorHtml}
+          </td>
           <td>${actionBtn}</td>
         `;
         tbody.appendChild(tr);
