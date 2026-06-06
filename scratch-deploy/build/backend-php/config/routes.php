@@ -24,6 +24,7 @@ return [
 
     'GET/api/whatsapp/sessions'      => ['WhatsAppController', 'sessions'],
     'POST/api/whatsapp/sessions'     => ['WhatsAppController', 'createSession'],
+    'DELETE/api/whatsapp/sessions'   => ['WhatsAppController', 'deleteSession'],
     'GET/api/whatsapp/qr'            => ['WhatsAppController', 'getQR'],
 
     'GET/api/reports/dashboard'      => ['CampaignController', 'dashboardStats'],

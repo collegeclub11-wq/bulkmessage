@@ -18,6 +18,13 @@ async function loadCampaigns() {
         const remaining = c.pending_count !== undefined ? parseInt(c.pending_count) : Math.max(0, c.total_contacts - (c.sent_count + c.failed_count));
         const estTime = formatEstimatedTime(remaining, c.status);
 
+        let actionBtn = '';
+        if (c.status === 'paused') {
+          actionBtn = `<button class="primary" style="padding: 4px 8px; font-size: 11px;" onclick="resumeCampaign(${c.id})">Resume</button>`;
+        } else if (c.status === 'processing' || c.status === 'pending') {
+          actionBtn = `<button class="secondary" style="padding: 4px 8px; font-size: 11px; border-color: orange; color: orange;" onclick="pauseCampaign(${c.id})">Pause</button>`;
+        }
+
         tr.innerHTML = `
           <td><strong>${escapeHtml(c.campaign_name)}</strong></td>
           <td>${escapeHtml(c.template_name || 'N/A')}</td>
@@ -31,12 +38,49 @@ async function loadCampaigns() {
             <br><span style="font-size: 11px; color: var(--primary-accent); font-weight: 500;">Est. Time: ${estTime}</span>
           </td>
           <td><span class="badge ${c.status === 'completed' ? 'success' : 'warning'}">${c.status.toUpperCase()}</span></td>
+          <td>${actionBtn}</td>
         `;
         tbody.appendChild(tr);
       });
     }
   } catch (err) {
     console.error('Failed to load campaigns list:', err);
+  }
+}
+
+async function pauseCampaign(campaignId) {
+  try {
+    const res = await fetch(`${API_BASE}/campaigns/pause`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ campaign_id: campaignId })
+    });
+    if (res.ok) {
+      loadCampaigns();
+    } else {
+      const data = await res.json();
+      alert(data.error || 'Failed to pause campaign');
+    }
+  } catch (e) {
+    alert('Failed to pause campaign: ' + e.message);
+  }
+}
+
+async function resumeCampaign(campaignId) {
+  try {
+    const res = await fetch(`${API_BASE}/campaigns/resume`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ campaign_id: campaignId })
+    });
+    if (res.ok) {
+      loadCampaigns();
+    } else {
+      const data = await res.json();
+      alert(data.error || 'Failed to resume campaign');
+    }
+  } catch (e) {
+    alert('Failed to resume campaign: ' + e.message);
   }
 }
 

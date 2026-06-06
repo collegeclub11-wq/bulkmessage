@@ -119,5 +119,49 @@ class CampaignController {
         echo $csv;
         exit;
     }
+
+    public function pause() {
+        $tenant = TenantMiddleware::getTenantDetails();
+        $input = json_decode(file_get_contents('php://input'), true);
+        $campaignId = $input['campaign_id'] ?? null;
+
+        if (!$campaignId) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing campaign ID']);
+            return;
+        }
+
+        $campaign = Campaign::findById($tenant['id'], $campaignId);
+        if (!$campaign) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Campaign not found']);
+            return;
+        }
+
+        Campaign::updateStatus($campaignId, 'paused');
+        echo json_encode(['message' => 'Campaign paused successfully']);
+    }
+
+    public function resume() {
+        $tenant = TenantMiddleware::getTenantDetails();
+        $input = json_decode(file_get_contents('php://input'), true);
+        $campaignId = $input['campaign_id'] ?? null;
+
+        if (!$campaignId) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing campaign ID']);
+            return;
+        }
+
+        $campaign = Campaign::findById($tenant['id'], $campaignId);
+        if (!$campaign) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Campaign not found']);
+            return;
+        }
+
+        Campaign::updateStatus($campaignId, 'pending');
+        echo json_encode(['message' => 'Campaign resumed successfully']);
+    }
 }
 ?>
