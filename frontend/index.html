@@ -680,7 +680,7 @@
             card.className = 'glass-panel session-card';
             
             let qrBlock = '';
-            if (s.status === 'scanning') {
+            if (s.status === 'scanning' || s.status === 'pending' || s.status === 'initializing') {
               // Trigger auto QR poller loop
               startQRPoller(s.session_id);
               qrBlock = `
