@@ -44,9 +44,27 @@ class SessionController {
 
     try {
       // Start Baileys initialization asynchronously
-      service.initialize().catch(err => {
+      service.initialize().catch(async (err) => {
         console.error(`Session failure in async init for ${key}:`, err);
         activeSessions.delete(key);
+        try {
+          const errorDetails = {
+            connection: 'failed',
+            timestamp: new Date().toISOString(),
+            error: {
+              message: err.message,
+              code: err.code || 'INIT_ERROR',
+              details: err.stack || String(err)
+            }
+          };
+          const db = require('../config/database');
+          await db.execute(
+            'UPDATE whatsapp_sessions SET status = \'disconnected\', connection_status = ? WHERE session_id = ?',
+            [JSON.stringify(errorDetails), session_id]
+          );
+        } catch (dbErr) {
+          console.error('Failed to log session init failure to DB:', dbErr.message);
+        }
       });
 
       return res.json({ message: 'Session bootstrap initiated', session_id });
