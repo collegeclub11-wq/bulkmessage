@@ -28,13 +28,40 @@ class WhatsAppController {
         $stmt = $db->prepare("INSERT INTO whatsapp_sessions (tenant_id, session_id, device_name, status) VALUES (?, ?, ?, 'pending')");
         $stmt->execute([$tenant['id'], $sessionId, $deviceName]);
 
-        // Trigger Node.js initialization request via HTTP
-        $this->pingNodeServiceInit($tenant['id'], $sessionId);
+        // Trigger session initialization on the stable bot
+        $botUrl = 'https://whatsappbackend-production-9e33.up.railway.app';
+        $statusUrl = $botUrl . '/status?sessionId=' . urlencode($sessionId);
+
+        $ch = curl_init($statusUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        curl_exec($ch);
+        curl_close($ch);
 
         echo json_encode([
             'message' => 'Session initialized',
             'session_id' => $sessionId
         ]);
+    }
+
+    public function deleteSession() {
+        $tenant = TenantMiddleware::getTenantDetails();
+        $input = json_decode(file_get_contents('php://input'), true);
+        $sessionId = $input['session_id'] ?? null;
+
+        if (!$sessionId) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing session_id']);
+            return;
+        }
+
+        $db = Database::getConnection();
+        $stmt = $db->prepare("DELETE FROM whatsapp_sessions WHERE tenant_id = ? AND session_id = ?");
+        $stmt->execute([$tenant['id'], $sessionId]);
+
+        echo json_encode(['message' => 'Session deleted successfully']);
     }
 
     public function getQR() {
@@ -47,61 +74,47 @@ class WhatsAppController {
             return;
         }
 
-        $db = Database::getConnection();
-        $stmt = $db->prepare("SELECT status, qr_code FROM whatsapp_sessions WHERE tenant_id = ? AND session_id = ?");
-        $stmt->execute([$tenant['id'], $sessionId]);
-        $session = $stmt->fetch();
+        $botUrl = 'https://whatsappbackend-production-9e33.up.railway.app';
+        $statusUrl = $botUrl . '/status?sessionId=' . urlencode($sessionId);
 
-        if (!$session) {
-            http_response_code(404);
-            echo json_encode(['error' => 'Session not found']);
-            return;
-        }
+        // Fetch status from the stable bot
+        $ch = curl_init($statusUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
 
-        // Trigger node boot if session is not connected to ensure socket is alive and listening
-        if ($session['status'] !== 'connected') {
-            $this->pingNodeServiceInit($tenant['id'], $sessionId);
-            if ($session['status'] === 'pending' || $session['status'] === 'disconnected') {
-                $session['status'] = 'scanning';
+        $status = 'disconnected';
+        $qrCode = null;
+
+        if ($response !== false && $httpCode === 200) {
+            $data = json_decode($response, true);
+            if (isset($data['status'])) {
+                $status = $data['status'];
+                if ($status === 'qr_ready' && !empty($data['qr'])) {
+                    $status = 'scanning';
+                    $qrCode = $data['qr'];
+                }
             }
         }
 
-        echo json_encode([
-            'status' => $session['status'],
-            'qr_code' => $session['qr_code']
-        ]);
-    }
-
-    private function pingNodeServiceInit($tenantId, $sessionId) {
-        $host = getenv('NODE_HOST') ?: '127.0.0.1';
-        $port = getenv('NODE_PORT');
-        
-        if (strpos($host, 'http://') === 0 || strpos($host, 'https://') === 0) {
-            $nodeUrl = $host;
+        // Update database with latest status from bot
+        $db = Database::getConnection();
+        if ($status === 'connected') {
+            $stmt = $db->prepare("UPDATE whatsapp_sessions SET status = ?, qr_code = ?, last_connected = NOW() WHERE tenant_id = ? AND session_id = ?");
+            $stmt->execute([$status, $qrCode, $tenant['id'], $sessionId]);
         } else {
-            $nodeUrl = "http://" . $host;
+            $stmt = $db->prepare("UPDATE whatsapp_sessions SET status = ?, qr_code = ? WHERE tenant_id = ? AND session_id = ?");
+            $stmt->execute([$status, $qrCode, $tenant['id'], $sessionId]);
         }
-        
-        if (!empty($port)) {
-            $nodeUrl .= ":" . $port;
-        }
-        
-        $nodeUrl .= "/api/session/init";
-        
-        $payload = json_encode([
-            'tenant_id' => $tenantId,
-            'session_id' => $sessionId
+
+        echo json_encode([
+            'status' => $status,
+            'qr_code' => $qrCode
         ]);
-
-        $ch = curl_init($nodeUrl);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 3); // short timeout
-
-        curl_exec($ch);
-        curl_close($ch);
     }
 }
 ?>

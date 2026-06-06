@@ -109,6 +109,7 @@
             <th>Target Size</th>
             <th>Progress</th>
             <th>Status</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody id="campaigns-tbody"></tbody>
@@ -680,7 +681,7 @@
             card.className = 'glass-panel session-card';
             
             let qrBlock = '';
-            if (s.status === 'scanning') {
+            if (s.status === 'scanning' || s.status === 'pending' || s.status === 'initializing') {
               // Trigger auto QR poller loop
               startQRPoller(s.session_id);
               qrBlock = `
@@ -703,7 +704,10 @@
             card.innerHTML = `
               <h3>${escapeHtml(s.device_name)}</h3>
               <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">ID: ${s.session_id}</p>
-              <div style="margin-top: 12px;"><span class="badge ${s.status === 'connected' ? 'success' : 'warning'}">${s.status.toUpperCase()}</span></div>
+              <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <span class="badge ${s.status === 'connected' ? 'success' : 'warning'}">${s.status.toUpperCase()}</span>
+                <button class="secondary" style="padding: 4px 8px; font-size: 12px; border-color: red; color: red;" onclick="deleteSession('${s.session_id}')">Delete</button>
+              </div>
               ${qrBlock}
             `;
             container.appendChild(card);
@@ -728,6 +732,22 @@
         loadSessions();
       } else {
         alert('Failed to initialize session device');
+      }
+    }
+
+    async function deleteSession(sessionId) {
+      if (!confirm('Are you sure you want to delete this session? You will need to link your device again to send messages.')) return;
+      
+      const res = await fetch(`${API_BASE}/whatsapp/sessions`, {
+        method: 'DELETE',
+        headers: getHeaders(),
+        body: JSON.stringify({ session_id: sessionId })
+      });
+
+      if (res.ok) {
+        loadSessions();
+      } else {
+        alert('Failed to delete session');
       }
     }
 
