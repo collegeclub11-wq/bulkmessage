@@ -116,18 +116,22 @@ class WhatsAppService {
       }
 
       if (connection === 'close') {
+        const wasConnected = this.isConnected;
         this.isConnected = false;
         const statusCode = lastDisconnect?.error?.output?.statusCode;
-        console.log(`Session ${this.sessionId} connection closed. Status code: ${statusCode}, error:`, lastDisconnect?.error);
+        console.log(`Session ${this.sessionId} connection closed. Status code: ${statusCode}, wasConnected=${wasConnected}, error:`, lastDisconnect?.error);
         
         if (statusCode === DisconnectReason.loggedOut) {
           console.log(`Session ${this.sessionId} is logged out/expired.`);
           await this.updateSessionStatus('expired');
+          await this.cleanAuth();
+        } else if (statusCode === DisconnectReason.restartRequired || !wasConnected) {
+          console.log(`Session ${this.sessionId} disconnected during handshake or requested restart (code: ${statusCode}). Reconnecting immediately (1s)...`);
+          setTimeout(() => this.initialize(), 1000);
         } else {
-          console.log(`Session ${this.sessionId} disconnected. Scheduling reconnect in 15 seconds...`);
+          console.log(`Session ${this.sessionId} disconnected (code: ${statusCode}). Scheduling reconnect in 10 seconds...`);
           await this.updateSessionStatus('disconnected');
-          // Start automated reconnect handler asynchronously
-          setTimeout(() => this.initialize(), 15000);
+          setTimeout(() => this.initialize(), 10000);
         }
       }
     });

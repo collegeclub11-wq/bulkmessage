@@ -8,7 +8,7 @@
     "worker": "node worker.js"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "latest",
+    "@whiskeysockets/baileys": "^7.0.0-rc13",
     "express": "^4.18.2",
     "mysql2": "^3.6.1",
     "pino": "^8.15.0",
