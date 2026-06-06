@@ -1,7 +1,12 @@
-const {Client} = require('ssh2'); 
-const conn = new Client(); 
-conn.on('ready', () => { 
-  conn.exec('node -v', (err, stream) => { 
-    stream.on('data', d => console.log(d.toString())).on('close', () => conn.end()); 
-  }); 
-}).connect({host: '82.25.106.230', port: 65002, username: 'u828453283', password: 'Sumit@787870'});
+const https = require('https');
+
+https.get('https://bulkmessage-production-4108.up.railway.app/health', (res) => {
+  console.log('Status Code:', res.statusCode);
+  let data = '';
+  res.on('data', (chunk) => data += chunk);
+  res.on('end', () => {
+    console.log('Response Body:', data);
+  });
+}).on('error', (err) => {
+  console.error('Error:', err.message);
+});
