@@ -26,7 +26,18 @@ app.post('/api/message/send', MessageController.send);
 // Health check
 app.get('/health', async (req, res) => {
   try {
-    await db.query('SELECT 1');
+    const [dbResult] = await db.query('SELECT DATABASE() as db, USER() as user');
+    const dbName = dbResult[0]?.db || 'unknown';
+    const dbUser = dbResult[0]?.user || 'unknown';
+    
+    let sessionCount = 0;
+    try {
+      const [sessions] = await db.query('SELECT COUNT(*) as count FROM whatsapp_sessions');
+      sessionCount = sessions[0]?.count || 0;
+    } catch (err) {
+      sessionCount = 'error: ' + err.message;
+    }
+
     let baileysVersion = 'unknown';
     try {
       baileysVersion = require('@whiskeysockets/baileys/package.json').version;
@@ -41,9 +52,21 @@ app.get('/health', async (req, res) => {
       waVersion = 'error: ' + err.message;
     }
 
+    // Safely extract pool host
+    let dbHost = 'unknown';
+    if (db.pool && db.pool.config && db.pool.config.connectionConfig) {
+      dbHost = db.pool.config.connectionConfig.host;
+    } else if (db.config && db.config.connectionConfig) {
+      dbHost = db.config.connectionConfig.host;
+    }
+
     res.json({ 
       status: 'UP', 
       database: 'connected',
+      dbHost,
+      dbName,
+      dbUser,
+      sessionCount,
       baileysVersion,
       waVersion
     });
