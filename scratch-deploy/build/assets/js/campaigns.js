@@ -45,13 +45,37 @@ async function loadCampaigns() {
             <span class="badge ${c.status === 'completed' ? 'success' : 'warning'}">${c.status.toUpperCase()}</span>
             ${errorHtml}
           </td>
-          <td>${actionBtn}</td>
+          <td>${actionBtn}<button class="primary" style="padding: 4px 8px; font-size: 11px; margin-left: 5px; background-color: #28a745; border-color: #28a745;" onclick="exportCampaignReport(${c.id})">Export</button></td>
         `;
         tbody.appendChild(tr);
       });
     }
   } catch (err) {
     console.error('Failed to load campaigns list:', err);
+  }
+}
+
+async function exportCampaignReport(campaignId) {
+  try {
+    const res = await fetch(`${API_BASE}/reports/export?id=${campaignId}`, {
+      headers: getHeaders()
+    });
+    if (res.ok) {
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `campaign_report_${campaignId}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } else {
+      const data = await res.json();
+      alert(data.error || 'Failed to export report');
+    }
+  } catch (e) {
+    alert('Failed to export report: ' + e.message);
   }
 }
 
