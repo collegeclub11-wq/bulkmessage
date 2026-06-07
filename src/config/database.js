@@ -25,7 +25,8 @@ const pool = mysql.createPool({
   database: process.env.DB_DATABASE || 'u828453283_bulk',
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  timezone: '+05:30'
 });
 
 module.exports = pool;
