@@ -140,6 +140,7 @@ class CampaignWorker {
         await db.execute('UPDATE bulk_campaigns SET status = \'processing\', start_time = NOW() WHERE id = ?', [campaign.id]);
       }
 
+
       const target = targets[0];
 
       // Enforce Tenant scoping check
