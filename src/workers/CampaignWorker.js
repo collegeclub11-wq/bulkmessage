@@ -35,6 +35,22 @@ class CampaignWorker {
 
       const campaign = campaigns[0];
 
+      // Load next pending contact for this campaign to check for completion first
+      const [targets] = await db.execute(
+        `SELECT cc.id as mapping_id, cc.attempt_count, c.id as contact_id, c.phone_number, c.name, c.custom_fields 
+         FROM campaign_contacts cc 
+         JOIN contacts c ON cc.contact_id = c.id 
+         WHERE cc.campaign_id = ? AND cc.status = 'pending' LIMIT 1`,
+         [campaign.id]
+      );
+
+      if (targets.length === 0) {
+        // Campaign fully completed
+        await db.execute('UPDATE bulk_campaigns SET status = \'completed\', end_time = NOW(), error_details = NULL WHERE id = ?', [campaign.id]);
+        this.isPolling = false;
+        return;
+      }
+
       // Check tenant message limit balance
       const [tenants] = await db.execute(
         'SELECT max_messages_limit, total_messages_sent FROM tenants WHERE id = ?',
@@ -122,22 +138,6 @@ class CampaignWorker {
       // Update campaign status to processing
       if (campaign.status === 'pending') {
         await db.execute('UPDATE bulk_campaigns SET status = \'processing\', start_time = NOW() WHERE id = ?', [campaign.id]);
-      }
-
-      // Load next pending contact for this campaign
-      const [targets] = await db.execute(
-        `SELECT cc.id as mapping_id, cc.attempt_count, c.id as contact_id, c.phone_number, c.name, c.custom_fields 
-         FROM campaign_contacts cc 
-         JOIN contacts c ON cc.contact_id = c.id 
-         WHERE cc.campaign_id = ? AND cc.status = 'pending' LIMIT 1`,
-        [campaign.id]
-      );
-
-      if (targets.length === 0) {
-        // Campaign fully completed
-        await db.execute('UPDATE bulk_campaigns SET status = \'completed\', end_time = NOW() WHERE id = ?', [campaign.id]);
-        this.isPolling = false;
-        return;
       }
 
       const target = targets[0];
