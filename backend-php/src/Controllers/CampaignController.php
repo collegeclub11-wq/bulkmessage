@@ -25,6 +25,16 @@ class CampaignController {
             return;
         }
 
+        $db = \Database::getConnection();
+        $stmt = $db->prepare("SELECT max_messages_limit, total_messages_sent FROM tenants WHERE id = ?");
+        $stmt->execute([$tenant['id']]);
+        $tenantInfo = $stmt->fetch();
+        if ($tenantInfo && $tenantInfo['total_messages_sent'] >= $tenantInfo['max_messages_limit']) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Low balance: Please contact Sumit Jaiswal 7870603149']);
+            return;
+        }
+
         $campaignId = Campaign::create([
             'tenant_id' => $tenant['id'],
             'campaign_name' => $input['campaign_name'],
@@ -157,6 +167,16 @@ class CampaignController {
         if (!$campaign) {
             http_response_code(404);
             echo json_encode(['error' => 'Campaign not found']);
+            return;
+        }
+
+        $db = \Database::getConnection();
+        $stmt = $db->prepare("SELECT max_messages_limit, total_messages_sent FROM tenants WHERE id = ?");
+        $stmt->execute([$tenant['id']]);
+        $tenantInfo = $stmt->fetch();
+        if ($tenantInfo && $tenantInfo['total_messages_sent'] >= $tenantInfo['max_messages_limit']) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Low balance: Please contact Sumit Jaiswal 7870603149']);
             return;
         }
 

@@ -17,6 +17,15 @@ async function loadDashboardStats() {
       const sent = parseInt(data.total_messages_sent) || 0;
       const remaining = Math.max(0, total - sent);
       document.getElementById('stat-remaining').innerText = `${remaining} / ${total}`;
+      
+      const banner = document.getElementById('dashboard-alert-banner');
+      if (banner) {
+        if (remaining <= 0) {
+          banner.style.display = 'block';
+        } else {
+          banner.style.display = 'none';
+        }
+      }
     }
   } catch (err) {
     console.error('Failed to load dashboard metrics:', err);
