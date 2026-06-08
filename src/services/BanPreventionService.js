@@ -27,22 +27,22 @@ class BanPreventionService {
     );
     const hourlySent = rows[0]?.count || 0;
 
-    // Standard variable delay (2-15 seconds) base
-    let minDelay = 2000;
-    let maxDelay = 8000;
+    // Standard variable delay (5-15 seconds) base
+    let minDelay = 5000;
+    let maxDelay = 15000;
 
     if (sessionAgeDays < 7) {
-      // New account: 15-30 sec
-      minDelay = 15000;
-      maxDelay = 30000;
+      // New account: 25-45 sec
+      minDelay = 25000;
+      maxDelay = 45000;
     } else if (hourlySent > 200) {
-      // High velocity load: 10-20 sec
+      // High velocity load: 20-35 sec
+      minDelay = 20000;
+      maxDelay = 35000;
+    } else if (hourlySent > 50) {
+      // Moderate velocity load: 10-20 sec
       minDelay = 10000;
       maxDelay = 20000;
-    } else if (hourlySent > 50) {
-      // Moderate velocity load: 5-12 sec
-      minDelay = 5000;
-      maxDelay = 12000;
     }
 
     // Return randomized delay in ms
