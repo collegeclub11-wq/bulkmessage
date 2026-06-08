@@ -108,7 +108,15 @@ class WhatsAppService {
       payload.image = options.image;
     }
 
-    const response = await axios.post(`${BOT_URL}/send`, payload);
+    let response;
+    try {
+      response = await axios.post(`${BOT_URL}/send`, payload);
+    } catch (err) {
+      if (err.response && err.response.data && err.response.data.error) {
+        throw new Error(`Bot Error: ${err.response.data.error}`);
+      }
+      throw new Error(err.message);
+    }
 
     if (response.data.status !== 'success') {
       throw new Error(response.data.error || 'Failed to send message via external bot');

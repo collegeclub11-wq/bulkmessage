@@ -199,18 +199,30 @@ class CampaignWorker {
       } catch (sendErr) {
         console.error(`Campaign message transmission failed for ${target.phone_number}:`, sendErr.message);
 
-        await db.execute(
-          'UPDATE campaign_contacts SET status = \'failed\', attempt_count = ?, error_message = ? WHERE id = ?',
-          [target.attempt_count + 1, sendErr.message, target.mapping_id]
-        );
+        const newAttemptCount = target.attempt_count + 1;
 
-        await db.execute(
-          `INSERT INTO message_logs (tenant_id, campaign_id, contact_id, session_id, phone_number, message_content, status, error_message, sent_at) 
-           VALUES (?, ?, ?, ?, ?, ?, 'failed', ?, NOW())`,
-          [campaign.tenant_id, campaign.id, target.contact_id, sessionId, target.phone_number, personalizedMsg, sendErr.message]
-        );
+        if (newAttemptCount >= 3) {
+          // Mark as permanently failed after 3 attempts
+          await db.execute(
+            'UPDATE campaign_contacts SET status = \'failed\', attempt_count = ?, error_message = ? WHERE id = ?',
+            [newAttemptCount, sendErr.message, target.mapping_id]
+          );
 
-        await this.incrementCampaignCounts(campaign.id, false);
+          await db.execute(
+            `INSERT INTO message_logs (tenant_id, campaign_id, contact_id, session_id, phone_number, message_content, status, error_message, sent_at) 
+             VALUES (?, ?, ?, ?, ?, ?, 'failed', ?, NOW())`,
+            [campaign.tenant_id, campaign.id, target.contact_id, sessionId, target.phone_number, personalizedMsg, sendErr.message]
+          );
+
+          await this.incrementCampaignCounts(campaign.id, false);
+        } else {
+          // Keep as pending, just update the attempt count and error message so it will be retried
+          console.log(`Will retry ${target.phone_number}. Attempt ${newAttemptCount}/3`);
+          await db.execute(
+            'UPDATE campaign_contacts SET attempt_count = ?, error_message = ? WHERE id = ?',
+            [newAttemptCount, sendErr.message, target.mapping_id]
+          );
+        }
       }
 
     } catch (e) {
