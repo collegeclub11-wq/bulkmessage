@@ -22,6 +22,7 @@ class Database {
 
             try {
                 self::$conn = new PDO($dsn, $user, $pass, $options);
+                self::$conn->exec("SET time_zone = '+05:30'");
             } catch (PDOException $e) {
                 http_response_code(500);
                 echo json_encode(['error' => 'Database connection failed: ' . $e->getMessage()]);
