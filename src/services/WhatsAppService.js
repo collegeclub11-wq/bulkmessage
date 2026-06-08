@@ -98,11 +98,17 @@ class WhatsAppService {
 
     // Call working bot send endpoint
     console.log(`Forwarding message send to external bot for session ${this.sessionId}`);
-    const response = await axios.post(`${BOT_URL}/send`, {
+    const payload = {
       sessionId: this.sessionId,
       number: formattedJid,
       message: processedMessage
-    });
+    };
+
+    if (options.image) {
+      payload.image = options.image;
+    }
+
+    const response = await axios.post(`${BOT_URL}/send`, payload);
 
     if (response.data.status !== 'success') {
       throw new Error(response.data.error || 'Failed to send message via external bot');
