@@ -13,9 +13,14 @@ async function loadCampaigns() {
       
       data.campaigns.forEach(c => {
         const tr = document.createElement('tr');
-        const progressPercent = c.total_contacts > 0 ? Math.round((c.sent_count / c.total_contacts) * 100) : 0;
+        const sent = parseInt(c.sent_count) || 0;
+        const failed = parseInt(c.failed_count) || 0;
+        const total = parseInt(c.total_contacts) || 0;
+        const processedCount = sent + failed;
         
-        const remaining = c.pending_count !== undefined ? parseInt(c.pending_count) : Math.max(0, c.total_contacts - (c.sent_count + c.failed_count));
+        const progressPercent = total > 0 ? Math.round((processedCount / total) * 100) : 0;
+        
+        const remaining = c.pending_count !== undefined ? parseInt(c.pending_count) : Math.max(0, total - processedCount);
         const estTime = formatEstimatedTime(remaining, c.status);
 
         let actionBtn = '';
@@ -29,16 +34,18 @@ async function loadCampaigns() {
           ? `<br><span style="font-size: 10px; color: #ff6b6b; display: block; margin-top: 4px; max-width: 150px; white-space: normal; word-break: break-word;">${escapeHtml(c.error_details)}</span>` 
           : '';
 
+        const failedHtml = failed > 0 ? `<span style="color: #ff6b6b; margin-left: 6px;">(${failed} failed)</span>` : '';
+
         tr.innerHTML = `
           <td><strong>${escapeHtml(c.campaign_name)}</strong></td>
           <td>${escapeHtml(c.template_name || 'N/A')}</td>
           <td>${escapeHtml(c.group_name || 'N/A')}</td>
-          <td>${c.total_contacts}</td>
+          <td>${total}</td>
           <td>
             <div style="background: rgba(255,255,255,0.1); border-radius: 9999px; width: 100%; height: 8px; overflow: hidden; margin-top: 4px;">
               <div style="background: var(--primary-accent); width: ${progressPercent}%; height: 100%;"></div>
             </div>
-            <span style="font-size: 11px; color: var(--text-muted);">${progressPercent}% (${c.sent_count}/${c.total_contacts})</span>
+            <span style="font-size: 11px; color: var(--text-muted);">${progressPercent}% (${sent}/${total} sent)${failedHtml}</span>
             <br><span style="font-size: 11px; color: var(--primary-accent); font-weight: 500;">Est. Time: ${estTime}</span>
           </td>
           <td>
@@ -131,9 +138,9 @@ function formatEstimatedTime(remainingCount, status) {
   if (status === 'failed') return 'Failed';
   if (remainingCount <= 0) return '0 sec';
   
-  const avgDelaySec = 5.0; // average dynamic delay
+  const avgDelaySec = 30.0; // Dynamic delay calculation based on user request (30 sec per number)
   const totalSec = remainingCount * avgDelaySec;
-  
+
   if (totalSec < 60) {
     return `${Math.round(totalSec)} sec`;
   }

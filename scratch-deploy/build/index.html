@@ -1,815 +1,1387 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - WhatsApp Bulk Sender</title>
-  <link rel="stylesheet" href="assets/css/style.css?v=1.6">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BulkWA Pro – WhatsApp Bulk Messaging Platform</title>
+  <meta name="description" content="Send thousands of WhatsApp messages instantly with BulkWA Pro. Manage campaigns, templates, contacts & multi-device sessions — all in one powerful dashboard. Contact Sumit Jaiswal: 7870603149" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
-    .grid-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 24px;
-      padding: 40px;
+    /* ======= RESET & TOKENS ======= */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #060b14;
+      --bg2:      #0b1220;
+      --glass:    rgba(255,255,255,0.04);
+      --border:   rgba(255,255,255,0.08);
+      --green:    #25d366;
+      --green2:   #00e5bc;
+      --teal:     #0af2d8;
+      --purple:   #7c5cfc;
+      --text:     #e4e8f0;
+      --muted:    #8190a8;
+      --danger:   #ff5c5c;
+      --radius:   18px;
+      --shadow:   0 24px 60px rgba(0,0,0,0.5);
     }
-    .stat-card {
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ======= NOISE OVERLAY ======= */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ======= NAV ======= */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
       display: flex;
-      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 60px;
+      background: rgba(6,11,20,0.82);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      transition: padding 0.3s;
     }
-    .stat-val {
-      font-size: 36px;
-      font-weight: 700;
-      color: var(--primary-accent);
-      margin-top: 8px;
-    }
-    .nav-tabs {
+    nav.scrolled { padding: 12px 60px; }
+
+    .nav-logo {
       display: flex;
-      padding: 0 40px;
-      margin-top: 24px;
-      border-bottom: 1px solid var(--panel-border);
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
     }
-    .nav-tab {
-      padding: 12px 24px;
-      cursor: pointer;
-      color: var(--text-muted);
-      border-bottom: 2px solid transparent;
+    .nav-logo .wa-icon {
+      width: 36px; height: 36px;
+      background: var(--green);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 0 16px rgba(37,211,102,0.4);
+    }
+    .nav-logo span { background: linear-gradient(135deg, #25d366, #00e5bc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-cta {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    /* ======= BUTTONS ======= */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 26px;
+      border-radius: 50px;
       font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
     }
-    .nav-tab.active {
-      color: var(--primary-accent);
-      border-color: var(--primary-accent);
+    .btn-primary {
+      background: linear-gradient(135deg, #25d366 0%, #00c9a7 100%);
+      color: #000;
+      box-shadow: 0 4px 24px rgba(37,211,102,0.35);
     }
-    .tab-content {
-      display: none;
-      padding: 40px;
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(37,211,102,0.5);
     }
-    .tab-content.active {
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover {
+      border-color: var(--green);
+      color: var(--green);
+    }
+    .btn-lg { padding: 16px 36px; font-size: 16px; }
+    .btn-xl { padding: 18px 44px; font-size: 17px; }
+
+    /* ======= SECTION BASE ======= */
+    section { position: relative; z-index: 1; }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 40px;
+    }
+
+    /* ======= HERO ======= */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 120px 0 80px;
+      overflow: hidden;
+    }
+
+    .hero-bg-glow {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+    }
+    .glow-1 { width: 600px; height: 600px; background: rgba(37,211,102,0.12); top: -100px; left: -200px; }
+    .glow-2 { width: 500px; height: 500px; background: rgba(124,92,252,0.1); bottom: -100px; right: -100px; }
+    .glow-3 { width: 300px; height: 300px; background: rgba(0,229,188,0.08); top: 50%; left: 50%; transform: translate(-50%,-50%); }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px 6px 8px;
+      background: rgba(37,211,102,0.12);
+      border: 1px solid rgba(37,211,102,0.25);
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--green);
+      margin-bottom: 24px;
+    }
+    .hero-badge .dot {
+      width: 8px; height: 8px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(37,211,102,0.4); }
+      50% { box-shadow: 0 0 0 6px rgba(37,211,102,0); }
+    }
+
+    .hero-title {
+      font-size: clamp(38px, 5vw, 62px);
+      font-weight: 900;
+      line-height: 1.08;
+      letter-spacing: -2px;
+      margin-bottom: 20px;
+    }
+    .hero-title .grad {
+      background: linear-gradient(135deg, #25d366 0%, #00e5bc 50%, #7c5cfc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-sub {
+      font-size: 18px;
+      color: var(--muted);
+      max-width: 480px;
+      margin-bottom: 36px;
+    }
+
+    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 48px; }
+
+    .hero-stats {
+      display: flex;
+      gap: 36px;
+    }
+    .h-stat { }
+    .h-stat .val {
+      font-size: 26px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #25d366, #00e5bc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .h-stat .lbl { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    .hero-img-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hero-img-wrap img {
+      width: 100%;
+      max-width: 540px;
+      border-radius: 24px;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 60px rgba(37,211,102,0.12);
+      animation: floatImg 5s ease-in-out infinite;
+    }
+    @keyframes floatImg {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-14px); }
+    }
+
+    /* floating badges on hero */
+    .float-badge {
+      position: absolute;
+      background: rgba(11,18,32,0.9);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 16px;
+      backdrop-filter: blur(12px);
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .float-badge.fb1 { top: 10%; left: -60px; animation: fb-float 3s ease-in-out infinite; }
+    .float-badge.fb2 { bottom: 20%; right: -40px; animation: fb-float 3.5s 0.5s ease-in-out infinite; }
+    .float-badge.fb3 { top: 50%; left: -80px; animation: fb-float 4s 1s ease-in-out infinite; }
+    @keyframes fb-float {
+      0%,100% { transform: translateY(0) rotate(-1deg); }
+      50% { transform: translateY(-8px) rotate(1deg); }
+    }
+    .fb-green { color: var(--green); }
+    .fb-teal { color: var(--teal); }
+    .fb-purple { color: var(--purple); }
+
+    /* ======= TRUSTED STRIP ======= */
+    .trusted-strip {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 28px 0;
+      background: var(--glass);
+    }
+    .trusted-inner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 60px;
+      flex-wrap: wrap;
+    }
+    .trusted-lbl {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .trusted-logos {
+      display: flex;
+      gap: 48px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .t-logo {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--muted);
+      opacity: 0.55;
+      transition: opacity 0.2s;
+    }
+    .t-logo:hover { opacity: 1; }
+
+    /* ======= SECTION HEADINGS ======= */
+    .section-label {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+    .section-sub {
+      font-size: 17px;
+      color: var(--muted);
+      max-width: 560px;
+    }
+    .text-center { text-align: center; }
+    .text-center .section-sub { margin: 0 auto; }
+
+    /* ======= FEATURES ======= */
+    #features { padding: 100px 0; }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 60px;
+    }
+
+    .feat-card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+      position: relative;
+      overflow: hidden;
+    }
+    .feat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--green), var(--teal));
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .feat-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(37,211,102,0.25);
+      box-shadow: 0 24px 48px rgba(0,0,0,0.4), 0 0 30px rgba(37,211,102,0.06);
+    }
+    .feat-card:hover::before { opacity: 1; }
+
+    .feat-icon {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    .ic-green  { background: rgba(37,211,102,0.12); }
+    .ic-teal   { background: rgba(0,229,188,0.12); }
+    .ic-purple { background: rgba(124,92,252,0.12); }
+    .ic-orange { background: rgba(255,136,0,0.12); }
+    .ic-blue   { background: rgba(64,156,255,0.12); }
+    .ic-pink   { background: rgba(255,64,128,0.12); }
+
+    .feat-card h3 {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .feat-card p { font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+    /* ======= HOW IT WORKS ======= */
+    #how { padding: 100px 0; background: linear-gradient(180deg, transparent, rgba(37,211,102,0.03), transparent); }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      margin-top: 60px;
+      position: relative;
+    }
+    .steps-grid::before {
+      content: '';
+      position: absolute;
+      top: 44px;
+      left: 12%;
+      right: 12%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--green), var(--teal), transparent);
+      z-index: 0;
+    }
+
+    .step-card {
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+    .step-num {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      border: 2px solid var(--green);
+      background: rgba(37,211,102,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--green);
+      margin: 0 auto 20px;
+      box-shadow: 0 0 24px rgba(37,211,102,0.2);
+    }
+    .step-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .step-card p { font-size: 13px; color: var(--muted); }
+
+    /* ======= STATS ======= */
+    #stats {
+      padding: 80px 0;
+      background: linear-gradient(135deg, rgba(37,211,102,0.06), rgba(124,92,252,0.06));
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 40px;
+      text-align: center;
+    }
+    .stat-num {
+      font-size: 48px;
+      font-weight: 900;
+      letter-spacing: -2px;
+      background: linear-gradient(135deg, #25d366, #00e5bc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .stat-lbl { font-size: 14px; color: var(--muted); margin-top: 6px; font-weight: 500; }
+
+    /* ======= PRICING ======= */
+    #pricing { padding: 100px 0; }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 60px;
+      align-items: start;
+    }
+
+    .price-card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px;
+      transition: transform 0.3s, box-shadow 0.3s;
+      position: relative;
+    }
+    .price-card:hover { transform: translateY(-6px); box-shadow: var(--shadow); }
+
+    .price-card.featured {
+      background: linear-gradient(145deg, rgba(37,211,102,0.08), rgba(0,229,188,0.05));
+      border-color: rgba(37,211,102,0.35);
+      box-shadow: 0 0 40px rgba(37,211,102,0.1);
+    }
+    .popular-badge {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #25d366, #00c9a7);
+      color: #000;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 16px;
+      border-radius: 50px;
+      white-space: nowrap;
+    }
+
+    .plan-name { font-size: 14px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+    .plan-price {
+      margin: 16px 0 8px;
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+    }
+    .plan-price .curr { font-size: 22px; font-weight: 700; padding-bottom: 6px; }
+    .plan-price .amt { font-size: 52px; font-weight: 900; letter-spacing: -3px; line-height: 1; }
+    .plan-price .per { font-size: 14px; color: var(--muted); padding-bottom: 8px; }
+
+    .plan-desc { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+
+    .plan-features { list-style: none; margin-bottom: 32px; }
+    .plan-features li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .plan-features li:last-child { border: none; }
+    .plan-features li .chk { color: var(--green); font-size: 16px; flex-shrink: 0; }
+    .plan-features li .x { color: var(--muted); font-size: 16px; flex-shrink: 0; }
+
+    /* ======= TESTIMONIALS ======= */
+    #testimonials { padding: 100px 0; }
+
+    .testi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 60px;
+    }
+    .testi-card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      transition: border-color 0.3s;
+    }
+    .testi-card:hover { border-color: rgba(37,211,102,0.2); }
+
+    .stars { color: #ffd60a; font-size: 14px; margin-bottom: 16px; }
+    .testi-text { font-size: 14px; color: var(--muted); line-height: 1.75; margin-bottom: 20px; font-style: italic; }
+    .testi-author { display: flex; align-items: center; gap: 12px; }
+    .testi-avatar {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #25d366, #00e5bc);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      color: #000;
+      flex-shrink: 0;
+    }
+    .testi-name { font-size: 14px; font-weight: 600; }
+    .testi-role { font-size: 12px; color: var(--muted); }
+
+    /* ======= FAQ ======= */
+    #faq { padding: 100px 0; }
+
+    .faq-list { max-width: 800px; margin: 60px auto 0; }
+    .faq-item {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .faq-item.open { border-color: rgba(37,211,102,0.25); }
+
+    .faq-q {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      gap: 16px;
+    }
+    .faq-icon {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: rgba(37,211,102,0.1);
+      border: 1px solid rgba(37,211,102,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--green);
+      font-size: 18px;
+      flex-shrink: 0;
+      transition: transform 0.3s;
+    }
+    .faq-item.open .faq-icon { transform: rotate(45deg); }
+
+    .faq-a {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease, padding 0.3s;
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.75;
+      padding: 0 24px;
+    }
+    .faq-item.open .faq-a { max-height: 200px; padding: 0 24px 20px; }
+
+    /* ======= CONTACT ======= */
+    #contact { padding: 100px 0; }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: start;
+    }
+
+    .contact-info h2 { margin-bottom: 16px; }
+    .contact-info p { color: var(--muted); font-size: 15px; margin-bottom: 36px; }
+
+    .contact-details { display: flex; flex-direction: column; gap: 20px; }
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 20px;
+      transition: border-color 0.3s;
+    }
+    .contact-item:hover { border-color: rgba(37,211,102,0.3); }
+    .ci-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: rgba(37,211,102,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .ci-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .ci-value { font-size: 16px; font-weight: 700; color: var(--text); }
+    .ci-value a { color: var(--green); }
+    .ci-value a:hover { text-decoration: underline; }
+
+    .contact-form-wrap {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px;
+    }
+    .contact-form-wrap h3 { font-size: 20px; font-weight: 700; margin-bottom: 24px; }
+
+    .form-group { margin-bottom: 18px; }
+    .form-group label {
       display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus { border-color: var(--green); }
+    .form-group textarea { resize: vertical; min-height: 110px; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    /* ======= CTA BANNER ======= */
+    #cta {
+      padding: 100px 0;
+      text-align: center;
+    }
+    .cta-box {
+      background: linear-gradient(135deg, rgba(37,211,102,0.12), rgba(124,92,252,0.1));
+      border: 1px solid rgba(37,211,102,0.2);
+      border-radius: 28px;
+      padding: 72px 60px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-box::after {
+      content: '';
+      position: absolute;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(37,211,102,0.12) 0%, transparent 70%);
+      top: -100px; left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+    .cta-box h2 {
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 900;
+      letter-spacing: -1.5px;
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 1;
+    }
+    .cta-box p { font-size: 17px; color: var(--muted); margin-bottom: 36px; position: relative; z-index: 1; }
+    .cta-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; position: relative; z-index: 1; }
+
+    /* ======= FOOTER ======= */
+    footer {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      padding: 60px 0 30px;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 48px;
+      margin-bottom: 48px;
+    }
+    .footer-brand p { font-size: 14px; color: var(--muted); margin-top: 12px; max-width: 280px; line-height: 1.7; }
+    .footer-col h4 { font-size: 13px; font-weight: 700; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col ul li { margin-bottom: 10px; }
+    .footer-col ul li a { font-size: 13px; color: var(--muted); transition: color 0.2s; }
+    .footer-col ul li a:hover { color: var(--green); }
+
+    .footer-bottom {
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .footer-bottom p { font-size: 13px; color: var(--muted); }
+    .footer-social { display: flex; gap: 12px; }
+    .social-btn {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: var(--muted);
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .social-btn:hover { border-color: var(--green); color: var(--green); }
+
+    /* ======= SCROLL ANIMATIONS ======= */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ======= TOAST ======= */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: linear-gradient(135deg, #25d366, #00c9a7);
+      color: #000;
+      padding: 14px 22px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 8px 32px rgba(37,211,102,0.4);
+      z-index: 999;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ======= WA FLOAT BUTTON ======= */
+    .wa-float {
+      position: fixed;
+      bottom: 30px;
+      left: 30px;
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: #25d366;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      box-shadow: 0 4px 20px rgba(37,211,102,0.5);
+      cursor: pointer;
+      z-index: 200;
+      transition: transform 0.2s;
+      text-decoration: none;
+    }
+    .wa-float:hover { transform: scale(1.12); }
+
+    /* ======= RESPONSIVE ======= */
+    @media (max-width: 1024px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .pricing-grid { grid-template-columns: 1fr 1fr; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      nav { padding: 16px 30px; }
+      .nav-links { display: none; }
+    }
+    @media (max-width: 768px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .hero-img-wrap { display: none; }
+      .steps-grid { grid-template-columns: repeat(2, 1fr); }
+      .steps-grid::before { display: none; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .pricing-grid { grid-template-columns: 1fr; }
+      .testi-grid { grid-template-columns: 1fr; }
+      .contact-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .features-grid { grid-template-columns: 1fr; }
+      .cta-box { padding: 40px 24px; }
+      .container { padding: 0 20px; }
+      nav { padding: 14px 20px; }
     }
   </style>
 </head>
 <body>
 
-  <header>
-    <div class="logo">🚀 WhatsApp Bulk Sender</div>
-    <nav>
-      <span id="company-name" style="margin-right: 24px; font-weight: 600; color: var(--text-muted);"></span>
-      <button id="logout-btn" class="secondary" style="padding: 8px 16px;">Logout</button>
-    </nav>
-  </header>
-
-  <div class="nav-tabs">
-    <div class="nav-tab active" onclick="switchTab('dashboard')">Dashboard</div>
-    <div class="nav-tab" onclick="switchTab('campaigns')">Campaigns</div>
-    <div class="nav-tab" onclick="switchTab('templates')">Templates</div>
-    <div class="nav-tab" onclick="switchTab('contacts')">Contacts</div>
-    <div class="nav-tab" onclick="switchTab('whatsapp')">WhatsApp Sessions</div>
-    <div class="nav-tab" id="nav-tab-superadmin" style="display: none;" onclick="switchTab('superadmin')">Super Admin</div>
-  </div>
-
-  <!-- Dashboard Tab -->
-  <div id="tab-dashboard" class="tab-content active">
-    <div id="dashboard-alert-banner" style="display: none; margin-bottom: 24px; padding: 16px; background: rgba(255, 107, 107, 0.2); border: 1px solid #ff6b6b; border-radius: 12px; color: #ff6b6b; font-weight: 500; font-size: 14px;">
-      ⚠️ Low balance: Please contact Sumit Jaiswal 7870603149
+  <!-- NAV -->
+  <nav id="main-nav">
+    <div class="nav-logo">
+      <div class="wa-icon">💬</div>
+      <span>BulkWA Pro</span>
     </div>
-    <div class="grid-container" style="padding: 0 0 24px 0;">
-      <div class="glass-panel stat-card">
-        <h3>Total Campaigns</h3>
-        <div class="stat-val" id="stat-campaigns">0</div>
-      </div>
-      <div class="glass-panel stat-card">
-        <h3>Contacts Targeted</h3>
-        <div class="stat-val" id="stat-contacts">0</div>
-      </div>
-      <div class="glass-panel stat-card">
-        <h3>Messages Dispatched</h3>
-        <div class="stat-val" id="stat-sent">0</div>
-      </div>
-      <div class="glass-panel stat-card">
-        <h3>Active Sessions</h3>
-        <div class="stat-val" id="stat-sessions">0</div>
-      </div>
-      <div class="glass-panel stat-card">
-        <h3>Remaining Messages</h3>
-        <div class="stat-val" id="stat-remaining" style="color: #00ffd0;">0 / 0</div>
-      </div>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#how">How It Works</a></li>
+      <li><a href="#testimonials">Testimonials</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="login.html" class="btn btn-outline" id="nav-login-btn">Login</a>
+      <a href="#contact" class="btn btn-primary" id="nav-get-started-btn">Get Started →</a>
     </div>
-  </div>
+  </nav>
 
-  <!-- Campaigns Tab -->
-  <div id="tab-campaigns" class="tab-content">
-    <div class="glass-panel">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-        <h2>Active Campaigns</h2>
-        <button onclick="openCreateCampaignModal()">Create Campaign</button>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Template</th>
-            <th>Group</th>
-            <th>Target Size</th>
-            <th>Progress</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="campaigns-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Templates Tab -->
-  <div id="tab-templates" class="tab-content">
-    <div class="glass-panel">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-        <h2>Message Templates</h2>
-        <div style="display: flex; gap: 10px;">
-          <button style="background: #ea4335; display: none;" id="btn-bulk-delete-templates" onclick="bulkDeleteTemplates()">Delete Selected</button>
-          <button onclick="openCreateTemplateModal()">Create Template</button>
-        </div>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th style="width: 40px;"><input type="checkbox" id="select-all-templates" onchange="toggleSelectAllTemplates(this)"></th>
-            <th>Template Name</th>
-            <th>Category</th>
-            <th>Message Body</th>
-            <th>Status</th>
-            <th style="width: 150px;">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="templates-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Contacts Tab -->
-  <div id="tab-contacts" class="tab-content">
-    <div class="glass-panel">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-        <h2>Contact Registry</h2>
-        <button onclick="openUploadModal()">Import Excel/CSV</button>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Phone</th>
-            <th>Email</th>
-            <th>Custom Fields</th>
-            <th>Group Name</th>
-          </tr>
-        </thead>
-        <tbody id="contacts-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- WhatsApp Tab -->
-  <div id="tab-whatsapp" class="tab-content">
-    <div class="glass-panel">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-        <h2>WhatsApp Device Links</h2>
-        <button onclick="createNewSession()">Link New Session</button>
-      </div>
-      <div id="sessions-list" class="grid-container" style="padding: 0;"></div>
-    </div>
-  </div>
-
-  <!-- Super Admin Tab -->
-  <div id="tab-superadmin" class="tab-content">
-    <div class="glass-panel" style="margin-bottom: 24px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-        <h2>Tenants Management</h2>
-        <button onclick="openCreateTenantModal()">Create Tenant</button>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Company Name</th>
-            <th>Tenant Key</th>
-            <th>Email</th>
-            <th>Plan</th>
-            <th>Status</th>
-            <th>Rate Limits (Min/Hr/Day)</th>
-            <th>Message Limit (Sent/Total)</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="superadmin-tenants-tbody"></tbody>
-      </table>
-    </div>
-
-    <div class="glass-panel">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-        <h2>API Keys Management (Validation)</h2>
-        <button onclick="openCreateApiKeyModal()">Generate API Key</button>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Tenant / Company</th>
-            <th>API Key</th>
-            <th>Status</th>
-            <th>Permissions</th>
-            <th>Created At</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="superadmin-keys-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Create Campaign Modal -->
-  <div id="modal-create-campaign" class="modal-overlay">
-    <div class="glass-panel modal-box">
-      <div class="modal-header">
-        <h2>Create Campaign</h2>
-        <button class="close-btn" onclick="closeModal('create-campaign')">&times;</button>
-      </div>
-      <form id="form-create-campaign" onsubmit="submitCampaign(event)">
-        <div style="margin-bottom: 16px;">
-          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Campaign Name</label>
-          <input type="text" id="campaign-name-input" required placeholder="e.g. June Welcome Broadcast">
-        </div>
-        <div style="margin-bottom: 16px;">
-          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Select Template</label>
-          <select id="campaign-template-select" required></select>
-        </div>
-        <div style="margin-bottom: 20px;">
-          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Select Contact Group</label>
-          <select id="campaign-group-select" required></select>
-        </div>
-        <div style="display: flex; gap: 12px; justify-content: flex-end;">
-          <button type="button" class="secondary" onclick="closeModal('create-campaign')">Cancel</button>
-          <button type="submit">Queue Campaign</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Create Template Modal -->
-  <div id="modal-create-template" class="modal-overlay">
-    <div class="glass-panel modal-box">
-      <div class="modal-header">
-        <h2>Create Template</h2>
-        <button class="close-btn" onclick="closeModal('create-template')">&times;</button>
-      </div>
-      <form id="form-create-template" onsubmit="submitTemplate(event)">
-        <div style="margin-bottom: 16px;">
-          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Template Name</label>
-          <input type="text" id="template-name-input" required placeholder="e.g. Welcome Message">
-        </div>
-        <div style="margin-bottom: 16px;">
-          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Category</label>
-          <input type="text" id="template-category-input" placeholder="e.g. marketing">
-        </div>
-        <div style="margin-bottom: 16px;">
-          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Message Body</label>
-          <textarea id="template-message-input" rows="4" required placeholder="Hello {{name}}, welcome to our service!"></textarea>
-          <div style="margin-top: 6px; font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
-            <span>Click to insert:</span>
-            <span class="badge" style="cursor: pointer; background: rgba(0, 229, 188, 0.15); color: #00e5bc; border: 1px dashed #00e5bc; padding: 2px 6px; border-radius: 4px;" onclick="insertVariable('template-message-input', '{{name}}')">{{name}} (Name)</span>
-            <span class="badge" style="cursor: pointer; background: rgba(0, 229, 188, 0.15); color: #00e5bc; border: 1px dashed #00e5bc; padding: 2px 6px; border-radius: 4px;" onclick="insertVariable('template-message-input', '{{phone}}')">{{phone}} (Phone)</span>
-          </div>
-        </div>
-        <div style="margin-bottom: 16px;">
-          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Image URL (Optional)</label>
-          <input type="url" id="template-image-input" placeholder="https://example.com/image.jpg">
-        </div>
-        <div style="margin-bottom: 20px;">
-          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Or Upload Image Directly (Optional)</label>
-          <input type="file" id="template-image-file" accept="image/*">
-        </div>
-        <div style="display: flex; gap: 12px; justify-content: flex-end;">
-          <button type="button" class="secondary" onclick="closeModal('create-template')">Cancel</button>
-          <button type="submit">Save Template</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Edit Template Modal -->
-  <div id="modal-edit-template" class="modal-overlay">
-    <div class="glass-panel modal-box">
-      <div class="modal-header">
-        <h2>Edit Template</h2>
-        <button class="close-btn" onclick="closeModal('edit-template')">&times;</button>
-      </div>
-      <form id="form-edit-template" onsubmit="submitEditTemplate(event)">
-        <input type="hidden" id="edit-template-id">
-        <div style="margin-bottom: 16px;">
-          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Template Name</label>
-          <input type="text" id="edit-template-name-input" required placeholder="e.g. Welcome Message">
-        </div>
-        <div style="margin-bottom: 16px;">
-          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Category</label>
-          <input type="text" id="edit-template-category-input" placeholder="e.g. marketing">
-        </div>
-        <div style="margin-bottom: 16px;">
-          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Message Body</label>
-          <textarea id="edit-template-message-input" rows="4" required placeholder="Hello {{name}}, welcome to our service!"></textarea>
-          <div style="margin-top: 6px; font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
-            <span>Click to insert:</span>
-            <span class="badge" style="cursor: pointer; background: rgba(0, 229, 188, 0.15); color: #00e5bc; border: 1px dashed #00e5bc; padding: 2px 6px; border-radius: 4px;" onclick="insertVariable('edit-template-message-input', '{{name}}')">{{name}} (Name)</span>
-            <span class="badge" style="cursor: pointer; background: rgba(0, 229, 188, 0.15); color: #00e5bc; border: 1px dashed #00e5bc; padding: 2px 6px; border-radius: 4px;" onclick="insertVariable('edit-template-message-input', '{{phone}}')">{{phone}} (Phone)</span>
-          </div>
-        </div>
-        <div style="margin-bottom: 16px;">
-          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Image URL (Optional)</label>
-          <input type="url" id="edit-template-image-input" placeholder="https://example.com/image.jpg">
-        </div>
-        <div style="margin-bottom: 20px;">
-          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Or Upload New Image Directly (Optional)</label>
-          <input type="file" id="edit-template-image-file" accept="image/*">
-        </div>
-        <div style="display: flex; gap: 12px; justify-content: flex-end;">
-          <button type="button" class="secondary" onclick="closeModal('edit-template')">Cancel</button>
-          <button type="submit">Update Template</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Import Contacts Modal -->
-  <div id="modal-upload-contacts" class="modal-overlay">
-    <div class="glass-panel modal-box">
-      <div class="modal-header">
-        <h2>Import Contacts</h2>
-        <button class="close-btn" onclick="closeModal('upload-contacts')">&times;</button>
-      </div>
-      <form id="form-upload-contacts" onsubmit="submitUpload(event)">
-        <div style="margin-bottom: 16px;">
-          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Choose CSV/Excel File</label>
-          <input type="file" id="contact-file-input" required accept=".csv,.xlsx">
-        </div>
-        <div style="margin-bottom: 16px;">
-          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Existing Group (Optional)</label>
-          <select id="contact-group-select"></select>
-        </div>
-        <div style="margin-bottom: 20px;">
-          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Or Create New Group</label>
-          <input type="text" id="contact-group-name-input" placeholder="e.g. Leads Campaign A">
-        </div>
-        <div style="display: flex; gap: 12px; justify-content: flex-end;">
-          <button type="button" class="secondary" onclick="closeModal('upload-contacts')">Cancel</button>
-          <button type="submit">Import</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Create Tenant Modal -->
-  <div id="modal-create-tenant" class="modal-overlay">
-    <div class="glass-panel modal-box">
-      <div class="modal-header">
-        <h2>Create New Tenant</h2>
-        <button class="close-btn" onclick="closeModal('create-tenant')">&times;</button>
-      </div>
-      <form id="form-create-tenant" onsubmit="submitCreateTenant(event)">
-        <div style="margin-bottom: 12px;">
-          <label style="display: block; margin-bottom: 4px; font-size: 11px; font-weight: 600;">Tenant Key (Unique URL/Slug)</label>
-          <input type="text" id="tenant-key-input" required placeholder="e.g. acme-corp">
-        </div>
-        <div style="margin-bottom: 12px;">
-          <label style="display: block; margin-bottom: 4px; font-size: 11px; font-weight: 600;">Company Name</label>
-          <input type="text" id="tenant-company-input" required placeholder="e.g. Acme Corporation">
-        </div>
-        <div style="margin-bottom: 12px;">
-          <label style="display: block; margin-bottom: 4px; font-size: 11px; font-weight: 600;">Email</label>
-          <input type="email" id="tenant-email-input" required placeholder="admin@acme.com">
-        </div>
-        <div style="margin-bottom: 12px;">
-          <label style="display: block; margin-bottom: 4px; font-size: 11px; font-weight: 600;">Password</label>
-          <input type="password" id="tenant-password-input" required placeholder="••••••••">
-        </div>
-        <div style="margin-bottom: 12px;">
-          <label style="display: block; margin-bottom: 4px; font-size: 11px; font-weight: 600;">Phone (Optional)</label>
-          <input type="text" id="tenant-phone-input" placeholder="+1234567890">
-        </div>
-        <div style="margin-bottom: 12px;">
-          <label style="display: block; margin-bottom: 4px; font-size: 11px; font-weight: 600;">Subscription Plan</label>
-          <select id="tenant-plan-input">
-            <option value="basic">Basic</option>
-            <option value="professional" selected>Professional</option>
-            <option value="enterprise">Enterprise</option>
-          </select>
-        </div>
-        <div style="margin-bottom: 12px;">
-          <label style="display: block; margin-bottom: 4px; font-size: 11px; font-weight: 600;">Max Message Limit (Balance)</label>
-          <input type="number" id="tenant-max-messages" value="10000" required placeholder="e.g. 100000">
-        </div>
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px;">
-          <div>
-            <label style="display: block; margin-bottom: 4px; font-size: 10px; font-weight: 600;">Limit / Min</label>
-            <input type="number" id="tenant-limit-min" value="20" required>
-          </div>
-          <div>
-            <label style="display: block; margin-bottom: 4px; font-size: 10px; font-weight: 600;">Limit / Hour</label>
-            <input type="number" id="tenant-limit-hour" value="200" required>
-          </div>
-          <div>
-            <label style="display: block; margin-bottom: 4px; font-size: 10px; font-weight: 600;">Limit / Day</label>
-            <input type="number" id="tenant-limit-day" value="1000" required>
-          </div>
-        </div>
-        <div style="display: flex; gap: 12px; justify-content: flex-end;">
-          <button type="button" class="secondary" onclick="closeModal('create-tenant')">Cancel</button>
-          <button type="submit">Create Tenant</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Create API Key Modal -->
-  <div id="modal-create-apikey" class="modal-overlay">
-    <div class="glass-panel modal-box">
-      <div class="modal-header">
-        <h2>Generate API Key</h2>
-        <button class="close-btn" onclick="closeModal('create-apikey')">&times;</button>
-      </div>
-      <form id="form-create-apikey" onsubmit="submitCreateApiKey(event)">
-        <div style="margin-bottom: 16px;">
-          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Select Tenant</label>
-          <select id="apikey-tenant-select" required></select>
-        </div>
-        <div style="margin-bottom: 20px;">
-          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Key Name / Label</label>
-          <input type="text" id="apikey-name-input" required placeholder="e.g. ERP Integration Key">
-        </div>
-        <div style="display: flex; gap: 12px; justify-content: flex-end;">
-          <button type="button" class="secondary" onclick="closeModal('create-apikey')">Cancel</button>
-          <button type="submit">Generate</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Show Credentials Modal -->
-  <div id="modal-show-credentials" class="modal-overlay">
-    <div class="glass-panel modal-box">
-      <div class="modal-header">
-        <h2>API Key Credentials Generated</h2>
-        <button class="close-btn" onclick="closeModal('show-credentials')">&times;</button>
-      </div>
-      <div style="margin-bottom: 16px;">
-        <p style="color: var(--danger); font-size: 13px; font-weight: 600; margin-bottom: 12px;">⚠️ WARNING: Copy these credentials now. They will not be shown again!</p>
-        <div style="margin-bottom: 12px;">
-          <label style="display: block; margin-bottom: 4px; font-size: 11px; font-weight: 600;">API Key</label>
-          <input type="text" id="cred-api-key" readonly style="width: 100%; background: rgba(0,0,0,0.2);">
-        </div>
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-bg-glow glow-1"></div>
+    <div class="hero-bg-glow glow-2"></div>
+    <div class="hero-bg-glow glow-3"></div>
+    <div class="container">
+      <div class="hero-grid">
+        <!-- Left -->
         <div>
-          <label style="display: block; margin-bottom: 4px; font-size: 11px; font-weight: 600;">API Secret</label>
-          <input type="text" id="cred-api-secret" readonly style="width: 100%; background: rgba(0,0,0,0.2);">
+          <div class="hero-badge"><div class="dot"></div> India's #1 WhatsApp Bulk Platform</div>
+          <h1 class="hero-title">
+            Send Millions of<br />
+            <span class="grad">WhatsApp Messages</span><br />
+            Effortlessly
+          </h1>
+          <p class="hero-sub">
+            Automate your WhatsApp outreach — campaigns, personalized templates, contact groups, multi-device sessions and real-time analytics in one powerful dashboard.
+          </p>
+          <div class="hero-actions">
+            <a href="#contact" class="btn btn-primary btn-lg" id="hero-start-btn">🚀 Start for Free</a>
+            <a href="#features" class="btn btn-outline btn-lg" id="hero-features-btn">Explore Features</a>
+          </div>
+          <div class="hero-stats">
+            <div class="h-stat"><div class="val">50M+</div><div class="lbl">Messages Sent</div></div>
+            <div class="h-stat"><div class="val">5,000+</div><div class="lbl">Active Users</div></div>
+            <div class="h-stat"><div class="val">99.9%</div><div class="lbl">Uptime SLA</div></div>
+          </div>
+        </div>
+        <!-- Right -->
+        <div class="hero-img-wrap">
+          <img src="assets/hero.png" alt="BulkWA Pro dashboard preview" />
+          <div class="float-badge fb1">
+            <span class="fb-green">✓</span> Campaign Queued
+            <div style="color:var(--muted); font-size:11px; margin-top:2px;">5,000 messages → Sending</div>
+          </div>
+          <div class="float-badge fb2">
+            <span class="fb-teal">📊</span> 98.3% Delivery Rate
+          </div>
+          <div class="float-badge fb3">
+            <span class="fb-purple">⚡</span> 250 msg/min
+          </div>
         </div>
       </div>
-      <div style="display: flex; justify-content: flex-end;">
-        <button onclick="closeModal('show-credentials')">Close & Done</button>
+    </div>
+  </section>
+
+  <!-- TRUSTED BY -->
+  <div class="trusted-strip">
+    <div class="container">
+      <div class="trusted-inner">
+        <span class="trusted-lbl">Trusted by businesses across India</span>
+        <div class="trusted-logos">
+          <div class="t-logo">FMCG Brands</div>
+          <div class="t-logo">Real Estate</div>
+          <div class="t-logo">EdTech</div>
+          <div class="t-logo">Healthcare</div>
+          <div class="t-logo">Finance</div>
+          <div class="t-logo">E-commerce</div>
+        </div>
       </div>
     </div>
   </div>
 
-  <script src="assets/js/app.js?v=1.6"></script>
-  <script src="assets/js/dashboard.js?v=1.6"></script>
-  <script src="assets/js/campaigns.js?v=1.6"></script>
-  <script src="assets/js/templates.js?v=1.6"></script>
-  <script src="assets/js/contacts.js?v=1.6"></script>
-  <script src="assets/js/superadmin.js?v=1.6"></script>
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="container">
+      <div class="text-center reveal">
+        <div class="section-label">Platform Features</div>
+        <h2 class="section-title">Everything You Need to Scale<br />Your WhatsApp Marketing</h2>
+        <p class="section-sub">A complete suite of tools designed to help you reach your audience faster and smarter.</p>
+      </div>
+      <div class="features-grid">
+
+        <div class="feat-card reveal">
+          <div class="feat-icon ic-green">📢</div>
+          <h3>Bulk Campaign Manager</h3>
+          <p>Create, schedule, and track broadcast campaigns to thousands of contacts. Monitor real-time delivery progress with live status polling.</p>
+        </div>
+
+        <div class="feat-card reveal">
+          <div class="feat-icon ic-teal">📝</div>
+          <h3>Smart Message Templates</h3>
+          <p>Design reusable message templates with dynamic variables like <code style="color:var(--green);">{{name}}</code> and <code style="color:var(--green);">{{phone}}</code>. Attach images via URL or direct upload.</p>
+        </div>
+
+        <div class="feat-card reveal">
+          <div class="feat-icon ic-purple">👥</div>
+          <h3>Contact Group Management</h3>
+          <p>Import thousands of contacts from Excel or CSV. Organize into smart groups and target specific audiences for each campaign.</p>
+        </div>
+
+        <div class="feat-card reveal">
+          <div class="feat-icon ic-orange">📱</div>
+          <h3>Multi-Device WhatsApp Sessions</h3>
+          <p>Link multiple WhatsApp numbers and devices simultaneously. Scan QR codes directly from the dashboard with live status updates.</p>
+        </div>
+
+        <div class="feat-card reveal">
+          <div class="feat-icon ic-blue">📊</div>
+          <h3>Real-Time Analytics Dashboard</h3>
+          <p>Track campaigns sent, contacts targeted, messages dispatched, and remaining balance — all from a single at-a-glance dashboard.</p>
+        </div>
+
+        <div class="feat-card reveal">
+          <div class="feat-icon ic-green">⚡</div>
+          <h3>Redis-Powered Queue System</h3>
+          <p>Enterprise-grade message queue built on Redis ensures high throughput, fault tolerance, and guaranteed delivery ordering.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how">
+    <div class="container">
+      <div class="text-center reveal">
+        <div class="section-label">How It Works</div>
+        <h2 class="section-title">Launch Your First Campaign<br />in 4 Simple Steps</h2>
+        <p class="section-sub">From setup to sent — get your bulk WhatsApp campaign running in minutes.</p>
+      </div>
+      <div class="steps-grid">
+        <div class="step-card reveal">
+          <div class="step-num">1</div>
+          <h3>Connect Your Device</h3>
+          <p>Link your WhatsApp number by scanning a QR code from our dashboard.</p>
+        </div>
+        <div class="step-card reveal">
+          <div class="step-num">2</div>
+          <h3>Import Contacts</h3>
+          <p>Upload your contacts via Excel or CSV and organize them into groups.</p>
+        </div>
+        <div class="step-card reveal">
+          <div class="step-num">3</div>
+          <h3>Create a Template</h3>
+          <p>Write personalized message templates with dynamic variables for each recipient.</p>
+        </div>
+        <div class="step-card reveal">
+          <div class="step-num">4</div>
+          <h3>Launch Campaign</h3>
+          <p>Select your template + group, hit send, and watch your messages deliver in real time.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section id="stats">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="reveal">
+          <div class="stat-num" data-target="50">0</div>
+          <div class="stat-lbl">Million+ Messages Sent</div>
+        </div>
+        <div class="reveal">
+          <div class="stat-num" data-target="5000">0</div>
+          <div class="stat-lbl">Active Users</div>
+        </div>
+        <div class="reveal">
+          <div class="stat-num" data-target="99">0</div>
+          <div class="stat-lbl">% Delivery Rate</div>
+        </div>
+        <div class="reveal">
+          <div class="stat-num" data-target="250">0</div>
+          <div class="stat-lbl">Messages Per Minute</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- TESTIMONIALS -->
+  <section id="testimonials">
+    <div class="container">
+      <div class="text-center reveal">
+        <div class="section-label">Testimonials</div>
+        <h2 class="section-title">Loved by Marketers Across India</h2>
+        <p class="section-sub">See what our customers are saying about BulkWA Pro.</p>
+      </div>
+      <div class="testi-grid">
+
+        <div class="testi-card reveal">
+          <div class="stars">★★★★★</div>
+          <p class="testi-text">"BulkWA Pro transformed our real estate outreach. We went from calling 50 leads per day to messaging 5,000 prospects overnight. The QR session linking is genius!"</p>
+          <div class="testi-author">
+            <div class="testi-avatar">R</div>
+            <div>
+              <div class="testi-name">Rahul Sharma</div>
+              <div class="testi-role">CEO, PropConnect India</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testi-card reveal">
+          <div class="stars">★★★★★</div>
+          <p class="testi-text">"BulkWA Pro is exactly what we needed to reach our customers. We now manage our entire contact list from a single dashboard. Incredible product!"</p>
+          <div class="testi-author">
+            <div class="testi-avatar">P</div>
+            <div>
+              <div class="testi-name">Priya Nair</div>
+              <div class="testi-role">Founder, DigiReach Agency</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testi-card reveal">
+          <div class="stars">★★★★★</div>
+          <p class="testi-text">"Delivery rates are phenomenal. The personalized templates with {{name}} make every message feel human. Our EdTech enrollment campaigns have tripled this semester."</p>
+          <div class="testi-author">
+            <div class="testi-avatar">A</div>
+            <div>
+              <div class="testi-name">Amit Verma</div>
+              <div class="testi-role">Marketing Head, LearnUp Academy</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq">
+    <div class="container">
+      <div class="text-center reveal">
+        <div class="section-label">FAQ</div>
+        <h2 class="section-title">Frequently Asked Questions</h2>
+        <p class="section-sub">Everything you need to know before getting started.</p>
+      </div>
+      <div class="faq-list">
+
+        <div class="faq-item reveal">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            Is BulkWA Pro safe to use with my WhatsApp account?
+            <div class="faq-icon">+</div>
+          </div>
+          <div class="faq-a">BulkWA Pro uses WhatsApp Web protocol with built-in rate limiting and anti-spam controls to minimize risk. We strongly recommend using dedicated business numbers and following WhatsApp's messaging policies for best results.</div>
+        </div>
+
+        <div class="faq-item reveal">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            How many WhatsApp devices can I connect?
+            <div class="faq-icon">+</div>
+          </div>
+          <div class="faq-a">You can connect multiple WhatsApp devices and manage them seamlessly through a single dashboard with real-time QR code linking.</div>
+        </div>
+
+        <div class="faq-item reveal">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            Can I personalize messages for each contact?
+            <div class="faq-icon">+</div>
+          </div>
+          <div class="faq-a">Absolutely! Our template engine supports dynamic variables like <strong>{{name}}</strong> and <strong>{{phone}}</strong> which are automatically replaced with each contact's actual data before sending.</div>
+        </div>
+
+        <div class="faq-item reveal">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            What file formats are supported for contact import?
+            <div class="faq-icon">+</div>
+          </div>
+          <div class="faq-a">We support both CSV and Excel (.xlsx) file formats. Your spreadsheet should have columns for name, phone number, and email. You can also add custom fields that map to template variables.</div>
+        </div>
+
+
+
+        <div class="faq-item reveal">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            How do I get support or top up my message balance?
+            <div class="faq-icon">+</div>
+          </div>
+          <div class="faq-a">Contact our support team directly: <strong>Sumit Jaiswal</strong> at <strong>📞 7870603149</strong>. You can also reach out via the contact form below and we'll respond within 2 hours.</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="container">
+      <div class="contact-grid">
+
+        <!-- Left: Info -->
+        <div class="contact-info">
+          <div class="section-label reveal">Get In Touch</div>
+          <h2 class="section-title reveal">Talk to Our<br /><span style="background:linear-gradient(135deg,#25d366,#00e5bc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Expert Team</span></h2>
+          <p class="reveal">Have questions about pricing, features, or need a custom enterprise plan? Reach out directly and we'll get back to you within 2 hours.</p>
+
+          <div class="contact-details">
+
+            <div class="contact-item reveal" id="contact-phone-card">
+              <div class="ci-icon">📞</div>
+              <div>
+                <div class="ci-label">Phone / WhatsApp</div>
+                <div class="ci-value"><a href="tel:+917870603149">+91 7870603149</a></div>
+              </div>
+            </div>
+
+            <div class="contact-item reveal" id="contact-person-card">
+              <div class="ci-icon">👤</div>
+              <div>
+                <div class="ci-label">Contact Person</div>
+                <div class="ci-value">Sumit Jaiswal</div>
+              </div>
+            </div>
+
+            <div class="contact-item reveal" id="contact-wa-card">
+              <div class="ci-icon">💬</div>
+              <div>
+                <div class="ci-label">WhatsApp Direct</div>
+                <div class="ci-value"><a href="https://wa.me/917870603149?text=Hello%20Sumit%2C%20I%27m%20interested%20in%20BulkWA%20Pro" target="_blank">Chat on WhatsApp →</a></div>
+              </div>
+            </div>
+
+            <div class="contact-item reveal" id="contact-hours-card">
+              <div class="ci-icon">🕐</div>
+              <div>
+                <div class="ci-label">Support Hours</div>
+                <div class="ci-value" style="font-size:14px;font-weight:600;">Mon – Sat &nbsp; 9:00 AM – 8:00 PM IST</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Right: Form -->
+        <div class="contact-form-wrap reveal">
+          <h3>Send Us a Message</h3>
+          <form id="contact-form" onsubmit="submitContactForm(event)">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Your Name</label>
+                <input type="text" id="cf-name" placeholder="Rahul Sharma" required />
+              </div>
+              <div class="form-group">
+                <label>Phone / WhatsApp</label>
+                <input type="tel" id="cf-phone" placeholder="+91 98XXXXXX00" required />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" id="cf-email" placeholder="you@company.com" />
+            </div>
+            <div class="form-group">
+              <label>Interest</label>
+              <select id="cf-plan">
+                <option value="">Select an option</option>
+                <option value="get_started">I want to get started</option>
+                <option value="demo">I want a demo</option>
+                <option value="other">Other inquiry</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Message</label>
+              <textarea id="cf-message" placeholder="Tell us about your business needs, expected volume, etc..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;" id="cf-submit-btn">Send Message →</button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section id="cta">
+    <div class="container">
+      <div class="cta-box reveal">
+        <h2>Ready to Supercharge Your<br /><span style="background:linear-gradient(135deg,#25d366,#00e5bc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">WhatsApp Marketing?</span></h2>
+        <p>Join 5,000+ businesses already scaling with BulkWA Pro. No setup fees. Start in minutes.</p>
+        <div class="cta-actions">
+          <a href="https://wa.me/917870603149?text=Hello%20Sumit%2C%20I%20want%20to%20get%20started%20with%20BulkWA%20Pro" target="_blank" class="btn btn-primary btn-xl" id="cta-wa-btn">💬 Chat with Sumit on WhatsApp</a>
+          <a href="login.html" class="btn btn-outline btn-xl" id="cta-login-btn">Login to Dashboard →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="nav-logo" style="margin-bottom:0;">
+            <div class="wa-icon">💬</div>
+            <span>BulkWA Pro</span>
+          </div>
+          <p>India's most powerful WhatsApp bulk messaging platform. Built for marketers, agencies, and enterprises.</p>
+          <div style="margin-top:16px; font-size:13px; color:var(--muted);">
+            📞 <a href="tel:+917870603149" style="color:var(--green);">+91 7870603149</a><br />
+            👤 Sumit Jaiswal
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Product</h4>
+          <ul>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#how">How It Works</a></li>
+            <li><a href="login.html">Dashboard Login</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="#contact">Contact Us</a></li>
+            <li><a href="#faq">FAQ</a></li>
+            <li><a href="#testimonials">Testimonials</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contact</h4>
+          <ul>
+            <li><a href="tel:+917870603149">📞 7870603149</a></li>
+            <li><a href="https://wa.me/917870603149" target="_blank">💬 WhatsApp Now</a></li>
+            <li><a href="#contact">✉️ Send Message</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2025 BulkWA Pro. Crafted by <strong>Sumit Jaiswal</strong>. All rights reserved.</p>
+        <div class="footer-social">
+          <a href="https://wa.me/917870603149" target="_blank" class="social-btn" title="WhatsApp">💬</a>
+          <a href="tel:+917870603149" class="social-btn" title="Call">📞</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- WhatsApp Float Button -->
+  <a href="https://wa.me/917870603149?text=Hello%20Sumit%2C%20I%27m%20interested%20in%20BulkWA%20Pro" target="_blank" class="wa-float" title="Chat on WhatsApp" id="wa-float-btn">💬</a>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
   <script>
-    let campaignPollInterval = null;
-
-    function switchTab(tabId) {
-      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      
-      const tabElement = event ? event.target : document.querySelector(`.nav-tab[onclick*="${tabId}"]`);
-      if (tabElement) tabElement.classList.add('active');
-      
-      document.getElementById(`tab-${tabId}`).classList.add('active');
-
-      // Clear existing campaigns poller
-      if (campaignPollInterval) {
-        clearInterval(campaignPollInterval);
-        campaignPollInterval = null;
-      }
-
-      if (tabId === 'dashboard') loadDashboardStats();
-      if (tabId === 'campaigns') {
-        loadCampaigns();
-        // Start polling every 3 seconds for live progress
-        campaignPollInterval = setInterval(loadCampaigns, 3000);
-      }
-      if (tabId === 'templates') loadTemplates();
-      if (tabId === 'contacts') loadContacts();
-      if (tabId === 'whatsapp') loadSessions();
-      if (tabId === 'superadmin') loadSuperAdminData();
-    }
-
-    function openModal(id) {
-      document.getElementById(`modal-${id}`).classList.add('active');
-    }
-
-    function closeModal(id) {
-      document.getElementById(`modal-${id}`).classList.remove('active');
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      const userRole = localStorage.getItem('user_role');
-      if (userRole === 'superadmin') {
-        const saTab = document.getElementById('nav-tab-superadmin');
-        if (saTab) saTab.style.display = 'block';
-      }
+    // ======= NAV SCROLL =======
+    const nav = document.getElementById('main-nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 60);
     });
 
-    // Modal controllers triggers
-    async function openCreateCampaignModal() {
-      // Load templates and groups options
-      const tempRes = await fetch(`${API_BASE}/templates`, { headers: getHeaders() });
-      const tempData = await tempRes.json();
-      const groupRes = await fetch(`${API_BASE}/contacts/groups`, { headers: getHeaders() });
-      const groupData = await groupRes.json();
-
-      const tempSelect = document.getElementById('campaign-template-select');
-      const groupSelect = document.getElementById('campaign-group-select');
-
-      tempSelect.innerHTML = '';
-      groupSelect.innerHTML = '';
-
-      if (tempData.templates) {
-        tempData.templates.forEach(t => {
-          tempSelect.innerHTML += `<option value="${t.id}">${escapeHtml(t.name)}</option>`;
-        });
-      }
-
-      if (groupData.groups) {
-        groupData.groups.forEach(g => {
-          groupSelect.innerHTML += `<option value="${g.id}">${escapeHtml(g.name)} (${g.total_contacts})</option>`;
-        });
-      }
-
-      openModal('create-campaign');
-    }
-
-    async function submitCampaign(e) {
-      e.preventDefault();
-      const campaign_name = document.getElementById('campaign-name-input').value;
-      const template_id = document.getElementById('campaign-template-select').value;
-      const group_id = document.getElementById('campaign-group-select').value;
-
-      const res = await fetch(`${API_BASE}/campaigns`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({ campaign_name, template_id, group_id })
-      });
-
-      if (res.ok) {
-        closeModal('create-campaign');
-        loadCampaigns();
-      } else {
-        const err = await res.json();
-        alert(err.error || 'Failed to queue campaign');
-      }
-    }
-
-    function openCreateTemplateModal() {
-      openModal('create-template');
-    }
-
-    async function submitTemplate(e) {
-      e.preventDefault();
-      const name = document.getElementById('template-name-input').value;
-      const category = document.getElementById('template-category-input').value;
-      const message = document.getElementById('template-message-input').value;
-      const image_url = document.getElementById('template-image-input').value;
-      const imageFile = document.getElementById('template-image-file').files[0];
-
-      const formData = new FormData();
-      formData.append('name', name);
-      formData.append('category', category);
-      formData.append('message', message);
-      formData.append('image_url', image_url);
-      if (imageFile) {
-        formData.append('image', imageFile);
-      }
-
-      const headers = getHeaders();
-      delete headers['Content-Type'];
-
-      const res = await fetch(`${API_BASE}/templates`, {
-        method: 'POST',
-        headers: headers,
-        body: formData
-      });
-
-      if (res.ok) {
-        closeModal('create-template');
-        document.getElementById('form-create-template').reset();
-        loadTemplates();
-      } else {
-        const err = await res.json();
-        alert(err.error || 'Failed to save template');
-      }
-    }
-
-    async function submitEditTemplate(e) {
-      e.preventDefault();
-      const id = document.getElementById('edit-template-id').value;
-      const name = document.getElementById('edit-template-name-input').value;
-      const category = document.getElementById('edit-template-category-input').value;
-      const message = document.getElementById('edit-template-message-input').value;
-      const image_url = document.getElementById('edit-template-image-input').value;
-      const imageFile = document.getElementById('edit-template-image-file').files[0];
-
-      const formData = new FormData();
-      formData.append('id', id);
-      formData.append('name', name);
-      formData.append('category', category);
-      formData.append('message', message);
-      formData.append('image_url', image_url);
-      if (imageFile) {
-        formData.append('image', imageFile);
-      }
-
-      const headers = getHeaders();
-      delete headers['Content-Type'];
-
-      const res = await fetch(`${API_BASE}/templates/update`, {
-        method: 'POST',
-        headers: headers,
-        body: formData
-      });
-
-      if (res.ok) {
-        closeModal('edit-template');
-        loadTemplates();
-      } else {
-        const err = await res.json();
-        alert(err.error || 'Failed to update template');
-      }
-    }
-
-    async function openUploadModal() {
-      const groupRes = await fetch(`${API_BASE}/contacts/groups`, { headers: getHeaders() });
-      const groupData = await groupRes.json();
-      const groupSelect = document.getElementById('contact-group-select');
-
-      groupSelect.innerHTML = '<option value="">-- Create New Instead --</option>';
-      if (groupData.groups) {
-        groupData.groups.forEach(g => {
-          groupSelect.innerHTML += `<option value="${g.id}">${escapeHtml(g.name)}</option>`;
-        });
-      }
-
-      openModal('upload-contacts');
-    }
-
-    async function submitUpload(e) {
-      e.preventDefault();
-      const fileInput = document.getElementById('contact-file-input');
-      const groupId = document.getElementById('contact-group-select').value;
-      const groupName = document.getElementById('contact-group-name-input').value;
-
-      const formData = new FormData();
-      formData.append('file', fileInput.files[0]);
-      if (groupId) formData.append('group_id', groupId);
-      if (groupName) formData.append('group_name', groupName);
-
-      const headers = getHeaders();
-      delete headers['Content-Type']; // Let browser set boundary parameters
-
-      const res = await fetch(`${API_BASE}/contacts/upload`, {
-        method: 'POST',
-        headers: headers,
-        body: formData
-      });
-
-      if (res.ok) {
-        closeModal('upload-contacts');
-        loadContacts();
-      } else {
-        const err = await res.json();
-        alert(err.error || 'Failed to import contacts');
-      }
-    }
-
-    // Sessions display and link helpers
-    async function loadSessions() {
-      try {
-        const res = await fetch(`${API_BASE}/whatsapp/sessions`, { headers: getHeaders() });
-        const data = await res.json();
-        const container = document.getElementById('sessions-list');
-        container.innerHTML = '';
-
-        if (data.sessions) {
-          data.sessions.forEach(s => {
-            const card = document.createElement('div');
-            card.className = 'glass-panel session-card';
-            
-            let qrBlock = '';
-            if (s.status === 'scanning' || s.status === 'pending' || s.status === 'initializing') {
-              // Trigger auto QR poller loop
-              startQRPoller(s.session_id);
-              qrBlock = `
-                <div class="qr-container" id="qr-container-${s.session_id}">
-                  <span style="color: black; font-size: 14px;">Loading QR code...</span>
-                </div>
-              `;
-            } else if (s.status === 'connected') {
-              qrBlock = `
-                <div style="margin: 24px 0; color: var(--success); font-weight: 600;">
-                  ✓ Linked & Connected
-                </div>
-              `;
-            } else {
-              qrBlock = `
-                <button style="margin: 24px 0;" onclick="refreshQR('${s.session_id}')">Generate QR Link</button>
-              `;
-            }
-
-            card.innerHTML = `
-              <h3>${escapeHtml(s.device_name)}</h3>
-              <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">ID: ${s.session_id}</p>
-              <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
-                <span class="badge ${s.status === 'connected' ? 'success' : 'warning'}">${s.status.toUpperCase()}</span>
-                <button class="secondary" style="padding: 4px 8px; font-size: 12px; border-color: red; color: red;" onclick="deleteSession('${s.session_id}')">Delete</button>
-              </div>
-              ${qrBlock}
-            `;
-            container.appendChild(card);
-          });
+    // ======= REVEAL ON SCROLL =======
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          revealObserver.unobserve(e.target);
         }
-      } catch (err) {
-        console.error('Failed to load session devices:', err);
-      }
-    }
-
-    async function createNewSession() {
-      const deviceName = prompt('Enter a name for this session device:', 'Primary WhatsApp Device');
-      if (!deviceName) return;
-
-      const res = await fetch(`${API_BASE}/whatsapp/sessions`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({ device_name: deviceName })
       });
+    }, { threshold: 0.12 });
 
-      if (res.ok) {
-        loadSessions();
-      } else {
-        alert('Failed to initialize session device');
-      }
-    }
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
-    async function deleteSession(sessionId) {
-      if (!confirm('Are you sure you want to delete this session? You will need to link your device again to send messages.')) return;
-      
-      const res = await fetch(`${API_BASE}/whatsapp/sessions`, {
-        method: 'DELETE',
-        headers: getHeaders(),
-        body: JSON.stringify({ session_id: sessionId })
+    // ======= COUNTER ANIMATION =======
+    const countObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const el = e.target;
+          const target = parseInt(el.dataset.target);
+          let count = 0;
+          const step = Math.ceil(target / 60);
+          const timer = setInterval(() => {
+            count += step;
+            if (count >= target) { count = target; clearInterval(timer); }
+            el.textContent = count >= 1000 ? count.toLocaleString() : count;
+          }, 24);
+          countObserver.unobserve(el);
+        }
       });
+    }, { threshold: 0.5 });
 
-      if (res.ok) {
-        loadSessions();
-      } else {
-        alert('Failed to delete session');
-      }
+    document.querySelectorAll('[data-target]').forEach(el => countObserver.observe(el));
+
+    // ======= FAQ TOGGLE =======
+    function toggleFaq(el) {
+      const item = el.parentElement;
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+      if (!isOpen) item.classList.add('open');
     }
 
-    let qrIntervals = {};
-    function startQRPoller(sessionId) {
-      if (qrIntervals[sessionId]) return;
-      
-      qrIntervals[sessionId] = setInterval(async () => {
-        const res = await fetch(`${API_BASE}/whatsapp/qr?session_id=${sessionId}`, { headers: getHeaders() });
-        const data = await res.json();
-        const container = document.getElementById(`qr-container-${sessionId}`);
-        
-        if (!container) {
-          clearInterval(qrIntervals[sessionId]);
-          delete qrIntervals[sessionId];
-          return;
-        }
-
-        if (data.status === 'connected') {
-          clearInterval(qrIntervals[sessionId]);
-          delete qrIntervals[sessionId];
-          loadSessions();
-        } else if (data.qr_code) {
-          container.innerHTML = `<img src="${data.qr_code}" alt="WhatsApp Connection QR">`;
-        }
-      }, 5000);
+    // ======= TOAST =======
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3500);
     }
 
-    async function refreshQR(sessionId) {
-      // Just re-poll to trigger generation
-      const res = await fetch(`${API_BASE}/whatsapp/qr?session_id=${sessionId}`, { headers: getHeaders() });
-      loadSessions();
+    // ======= CONTACT FORM =======
+    function submitContactForm(e) {
+      e.preventDefault();
+      const name = document.getElementById('cf-name').value;
+      const phone = document.getElementById('cf-phone').value;
+      const email = document.getElementById('cf-email').value;
+      const plan = document.getElementById('cf-plan').value;
+      const message = document.getElementById('cf-message').value;
+
+      // Redirect to WhatsApp with pre-filled message
+      const waMsg = `Hello Sumit! I'm interested in BulkWA Pro.%0A%0AName: ${encodeURIComponent(name)}%0APhone: ${encodeURIComponent(phone)}%0AEmail: ${encodeURIComponent(email)}%0APlan: ${encodeURIComponent(plan)}%0AMessage: ${encodeURIComponent(message)}`;
+      window.open(`https://wa.me/917870603149?text=${waMsg}`, '_blank');
+      showToast('✓ Opening WhatsApp to connect with Sumit!');
+      document.getElementById('contact-form').reset();
     }
+
+    // ======= SMOOTH HOVER PARALLAX on HERO =======
+    const heroSection = document.getElementById('hero');
+    heroSection && heroSection.addEventListener('mousemove', (e) => {
+      const { clientX, clientY } = e;
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+      const dx = (clientX - cx) / cx;
+      const dy = (clientY - cy) / cy;
+      document.querySelectorAll('.float-badge').forEach((b, i) => {
+        const factor = (i + 1) * 5;
+        b.style.transform = `translate(${dx * factor}px, ${dy * factor}px)`;
+      });
+    });
   </script>
 </body>
 </html>

@@ -45,7 +45,8 @@ class TemplateController {
                 if (move_uploaded_file($fileTmpPath, $destPath)) {
                     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
                     $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-                    $imageUrl = $protocol . $host . "/bulk/backend-php/public/uploads/" . $newFileName;
+                    $basePath = ($host === 'localhost' || $host === '127.0.0.1') ? "/bulk/backend-php/public/uploads/" : "/backend-php/public/uploads/";
+                    $imageUrl = $protocol . $host . $basePath . $newFileName;
                 }
             }
         }
@@ -107,7 +108,8 @@ class TemplateController {
                 if (move_uploaded_file($fileTmpPath, $destPath)) {
                     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
                     $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-                    $imageUrl = $protocol . $host . "/bulk/backend-php/public/uploads/" . $newFileName;
+                    $basePath = ($host === 'localhost' || $host === '127.0.0.1') ? "/bulk/backend-php/public/uploads/" : "/backend-php/public/uploads/";
+                    $imageUrl = $protocol . $host . $basePath . $newFileName;
                 }
             }
         }

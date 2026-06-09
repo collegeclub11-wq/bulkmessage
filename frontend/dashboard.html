@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - WhatsApp Bulk Sender</title>
+  <link rel="stylesheet" href="assets/css/style.css?v=1.6">
+  <style>
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      padding: 40px;
+    }
+    .stat-card {
+      display: flex;
+      flex-direction: column;
+    }
+    .stat-val {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--primary-accent);
+      margin-top: 8px;
+    }
+    .nav-tabs {
+      display: flex;
+      padding: 0 40px;
+      margin-top: 24px;
+      border-bottom: 1px solid var(--panel-border);
+    }
+    .nav-tab {
+      padding: 12px 24px;
+      cursor: pointer;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      font-weight: 600;
+    }
+    .nav-tab.active {
+      color: var(--primary-accent);
+      border-color: var(--primary-accent);
+    }
+    .tab-content {
+      display: none;
+      padding: 40px;
+    }
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">🚀 WhatsApp Bulk Sender</div>
+    <nav>
+      <span id="company-name" style="margin-right: 24px; font-weight: 600; color: var(--text-muted);"></span>
+      <button id="logout-btn" class="secondary" style="padding: 8px 16px;">Logout</button>
+    </nav>
+  </header>
+
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="switchTab('dashboard')">Dashboard</div>
+    <div class="nav-tab" onclick="switchTab('campaigns')">Campaigns</div>
+    <div class="nav-tab" onclick="switchTab('templates')">Templates</div>
+    <div class="nav-tab" onclick="switchTab('contacts')">Contacts</div>
+    <div class="nav-tab" onclick="switchTab('whatsapp')">WhatsApp Sessions</div>
+    <div class="nav-tab" id="nav-tab-superadmin" style="display: none;" onclick="switchTab('superadmin')">Super Admin</div>
+  </div>
+
+  <!-- Dashboard Tab -->
+  <div id="tab-dashboard" class="tab-content active">
+    <div id="dashboard-alert-banner" style="display: none; margin-bottom: 24px; padding: 16px; background: rgba(255, 107, 107, 0.2); border: 1px solid #ff6b6b; border-radius: 12px; color: #ff6b6b; font-weight: 500; font-size: 14px;">
+      ⚠️ Low balance: Please contact Sumit Jaiswal 7870603149
+    </div>
+    <div class="grid-container" style="padding: 0 0 24px 0;">
+      <div class="glass-panel stat-card">
+        <h3>Total Campaigns</h3>
+        <div class="stat-val" id="stat-campaigns">0</div>
+      </div>
+      <div class="glass-panel stat-card">
+        <h3>Contacts Targeted</h3>
+        <div class="stat-val" id="stat-contacts">0</div>
+      </div>
+      <div class="glass-panel stat-card">
+        <h3>Messages Dispatched</h3>
+        <div class="stat-val" id="stat-sent">0</div>
+      </div>
+      <div class="glass-panel stat-card">
+        <h3>Active Sessions</h3>
+        <div class="stat-val" id="stat-sessions">0</div>
+      </div>
+      <div class="glass-panel stat-card">
+        <h3>Remaining Messages</h3>
+        <div class="stat-val" id="stat-remaining" style="color: #00ffd0;">0 / 0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Campaigns Tab -->
+  <div id="tab-campaigns" class="tab-content">
+    <div class="glass-panel">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h2>Active Campaigns</h2>
+        <button onclick="openCreateCampaignModal()">Create Campaign</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Template</th>
+            <th>Group</th>
+            <th>Target Size</th>
+            <th>Progress</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="campaigns-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Templates Tab -->
+  <div id="tab-templates" class="tab-content">
+    <div class="glass-panel">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h2>Message Templates</h2>
+        <div style="display: flex; gap: 10px;">
+          <button style="background: #ea4335; display: none;" id="btn-bulk-delete-templates" onclick="bulkDeleteTemplates()">Delete Selected</button>
+          <button onclick="openCreateTemplateModal()">Create Template</button>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 40px;"><input type="checkbox" id="select-all-templates" onchange="toggleSelectAllTemplates(this)"></th>
+            <th>Template Name</th>
+            <th>Category</th>
+            <th>Message Body</th>
+            <th>Status</th>
+            <th style="width: 150px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="templates-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Contacts Tab -->
+  <div id="tab-contacts" class="tab-content">
+    <div class="glass-panel">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h2>Contact Registry</h2>
+        <button onclick="openUploadModal()">Import Excel/CSV</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th>Custom Fields</th>
+            <th>Group Name</th>
+          </tr>
+        </thead>
+        <tbody id="contacts-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- WhatsApp Tab -->
+  <div id="tab-whatsapp" class="tab-content">
+    <div class="glass-panel">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h2>WhatsApp Device Links</h2>
+        <button onclick="createNewSession()">Link New Session</button>
+      </div>
+      <div id="sessions-list" class="grid-container" style="padding: 0;"></div>
+    </div>
+  </div>
+
+  <!-- Super Admin Tab -->
+  <div id="tab-superadmin" class="tab-content">
+    <div class="glass-panel" style="margin-bottom: 24px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h2>Tenants Management</h2>
+        <button onclick="openCreateTenantModal()">Create Tenant</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Company Name</th>
+            <th>Tenant Key</th>
+            <th>Email</th>
+            <th>Plan</th>
+            <th>Status</th>
+            <th>Rate Limits (Min/Hr/Day)</th>
+            <th>Message Limit (Sent/Total)</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="superadmin-tenants-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="glass-panel">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h2>API Keys Management (Validation)</h2>
+        <button onclick="openCreateApiKeyModal()">Generate API Key</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Tenant / Company</th>
+            <th>API Key</th>
+            <th>Status</th>
+            <th>Permissions</th>
+            <th>Created At</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="superadmin-keys-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Create Campaign Modal -->
+  <div id="modal-create-campaign" class="modal-overlay">
+    <div class="glass-panel modal-box">
+      <div class="modal-header">
+        <h2>Create Campaign</h2>
+        <button class="close-btn" onclick="closeModal('create-campaign')">&times;</button>
+      </div>
+      <form id="form-create-campaign" onsubmit="submitCampaign(event)">
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Campaign Name</label>
+          <input type="text" id="campaign-name-input" required placeholder="e.g. June Welcome Broadcast">
+        </div>
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Select Template</label>
+          <select id="campaign-template-select" required></select>
+        </div>
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Select Contact Group</label>
+          <select id="campaign-group-select" required></select>
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button type="button" class="secondary" onclick="closeModal('create-campaign')">Cancel</button>
+          <button type="submit">Queue Campaign</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Create Template Modal -->
+  <div id="modal-create-template" class="modal-overlay">
+    <div class="glass-panel modal-box">
+      <div class="modal-header">
+        <h2>Create Template</h2>
+        <button class="close-btn" onclick="closeModal('create-template')">&times;</button>
+      </div>
+      <form id="form-create-template" onsubmit="submitTemplate(event)">
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Template Name</label>
+          <input type="text" id="template-name-input" required placeholder="e.g. Welcome Message">
+        </div>
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Category</label>
+          <input type="text" id="template-category-input" placeholder="e.g. marketing">
+        </div>
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Message Body</label>
+          <textarea id="template-message-input" rows="4" required placeholder="Hello {{name}}, welcome to our service!"></textarea>
+          <div style="margin-top: 6px; font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
+            <span>Click to insert:</span>
+            <span class="badge" style="cursor: pointer; background: rgba(0, 229, 188, 0.15); color: #00e5bc; border: 1px dashed #00e5bc; padding: 2px 6px; border-radius: 4px;" onclick="insertVariable('template-message-input', '{{name}}')">{{name}} (Name)</span>
+            <span class="badge" style="cursor: pointer; background: rgba(0, 229, 188, 0.15); color: #00e5bc; border: 1px dashed #00e5bc; padding: 2px 6px; border-radius: 4px;" onclick="insertVariable('template-message-input', '{{phone}}')">{{phone}} (Phone)</span>
+          </div>
+        </div>
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Image URL (Optional)</label>
+          <input type="url" id="template-image-input" placeholder="https://example.com/image.jpg">
+        </div>
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Or Upload Image Directly (Optional)</label>
+          <input type="file" id="template-image-file" accept="image/*">
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button type="button" class="secondary" onclick="closeModal('create-template')">Cancel</button>
+          <button type="submit">Save Template</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Template Modal -->
+  <div id="modal-edit-template" class="modal-overlay">
+    <div class="glass-panel modal-box">
+      <div class="modal-header">
+        <h2>Edit Template</h2>
+        <button class="close-btn" onclick="closeModal('edit-template')">&times;</button>
+      </div>
+      <form id="form-edit-template" onsubmit="submitEditTemplate(event)">
+        <input type="hidden" id="edit-template-id">
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Template Name</label>
+          <input type="text" id="edit-template-name-input" required placeholder="e.g. Welcome Message">
+        </div>
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Category</label>
+          <input type="text" id="edit-template-category-input" placeholder="e.g. marketing">
+        </div>
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Message Body</label>
+          <textarea id="edit-template-message-input" rows="4" required placeholder="Hello {{name}}, welcome to our service!"></textarea>
+          <div style="margin-top: 6px; font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
+            <span>Click to insert:</span>
+            <span class="badge" style="cursor: pointer; background: rgba(0, 229, 188, 0.15); color: #00e5bc; border: 1px dashed #00e5bc; padding: 2px 6px; border-radius: 4px;" onclick="insertVariable('edit-template-message-input', '{{name}}')">{{name}} (Name)</span>
+            <span class="badge" style="cursor: pointer; background: rgba(0, 229, 188, 0.15); color: #00e5bc; border: 1px dashed #00e5bc; padding: 2px 6px; border-radius: 4px;" onclick="insertVariable('edit-template-message-input', '{{phone}}')">{{phone}} (Phone)</span>
+          </div>
+        </div>
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Image URL (Optional)</label>
+          <input type="url" id="edit-template-image-input" placeholder="https://example.com/image.jpg">
+        </div>
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Or Upload New Image Directly (Optional)</label>
+          <input type="file" id="edit-template-image-file" accept="image/*">
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button type="button" class="secondary" onclick="closeModal('edit-template')">Cancel</button>
+          <button type="submit">Update Template</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Import Contacts Modal -->
+  <div id="modal-upload-contacts" class="modal-overlay">
+    <div class="glass-panel modal-box">
+      <div class="modal-header">
+        <h2>Import Contacts</h2>
+        <button class="close-btn" onclick="closeModal('upload-contacts')">&times;</button>
+      </div>
+      <form id="form-upload-contacts" onsubmit="submitUpload(event)">
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Choose CSV/Excel File</label>
+          <input type="file" id="contact-file-input" required accept=".csv,.xlsx">
+        </div>
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Existing Group (Optional)</label>
+          <select id="contact-group-select"></select>
+        </div>
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Or Create New Group</label>
+          <input type="text" id="contact-group-name-input" placeholder="e.g. Leads Campaign A">
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button type="button" class="secondary" onclick="closeModal('upload-contacts')">Cancel</button>
+          <button type="submit">Import</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Create Tenant Modal -->
+  <div id="modal-create-tenant" class="modal-overlay">
+    <div class="glass-panel modal-box">
+      <div class="modal-header">
+        <h2>Create New Tenant</h2>
+        <button class="close-btn" onclick="closeModal('create-tenant')">&times;</button>
+      </div>
+      <form id="form-create-tenant" onsubmit="submitCreateTenant(event)">
+        <div style="margin-bottom: 12px;">
+          <label style="display: block; margin-bottom: 4px; font-size: 11px; font-weight: 600;">Tenant Key (Unique URL/Slug)</label>
+          <input type="text" id="tenant-key-input" required placeholder="e.g. acme-corp">
+        </div>
+        <div style="margin-bottom: 12px;">
+          <label style="display: block; margin-bottom: 4px; font-size: 11px; font-weight: 600;">Company Name</label>
+          <input type="text" id="tenant-company-input" required placeholder="e.g. Acme Corporation">
+        </div>
+        <div style="margin-bottom: 12px;">
+          <label style="display: block; margin-bottom: 4px; font-size: 11px; font-weight: 600;">Email</label>
+          <input type="email" id="tenant-email-input" required placeholder="admin@acme.com">
+        </div>
+        <div style="margin-bottom: 12px;">
+          <label style="display: block; margin-bottom: 4px; font-size: 11px; font-weight: 600;">Password</label>
+          <input type="password" id="tenant-password-input" required placeholder="••••••••">
+        </div>
+        <div style="margin-bottom: 12px;">
+          <label style="display: block; margin-bottom: 4px; font-size: 11px; font-weight: 600;">Phone (Optional)</label>
+          <input type="text" id="tenant-phone-input" placeholder="+1234567890">
+        </div>
+        <div style="margin-bottom: 12px;">
+          <label style="display: block; margin-bottom: 4px; font-size: 11px; font-weight: 600;">Subscription Plan</label>
+          <select id="tenant-plan-input">
+            <option value="basic">Basic</option>
+            <option value="professional" selected>Professional</option>
+            <option value="enterprise">Enterprise</option>
+          </select>
+        </div>
+        <div style="margin-bottom: 12px;">
+          <label style="display: block; margin-bottom: 4px; font-size: 11px; font-weight: 600;">Max Message Limit (Balance)</label>
+          <input type="number" id="tenant-max-messages" value="10000" required placeholder="e.g. 100000">
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px;">
+          <div>
+            <label style="display: block; margin-bottom: 4px; font-size: 10px; font-weight: 600;">Limit / Min</label>
+            <input type="number" id="tenant-limit-min" value="20" required>
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 4px; font-size: 10px; font-weight: 600;">Limit / Hour</label>
+            <input type="number" id="tenant-limit-hour" value="200" required>
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 4px; font-size: 10px; font-weight: 600;">Limit / Day</label>
+            <input type="number" id="tenant-limit-day" value="1000" required>
+          </div>
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button type="button" class="secondary" onclick="closeModal('create-tenant')">Cancel</button>
+          <button type="submit">Create Tenant</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Create API Key Modal -->
+  <div id="modal-create-apikey" class="modal-overlay">
+    <div class="glass-panel modal-box">
+      <div class="modal-header">
+        <h2>Generate API Key</h2>
+        <button class="close-btn" onclick="closeModal('create-apikey')">&times;</button>
+      </div>
+      <form id="form-create-apikey" onsubmit="submitCreateApiKey(event)">
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Select Tenant</label>
+          <select id="apikey-tenant-select" required></select>
+        </div>
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600;">Key Name / Label</label>
+          <input type="text" id="apikey-name-input" required placeholder="e.g. ERP Integration Key">
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <button type="button" class="secondary" onclick="closeModal('create-apikey')">Cancel</button>
+          <button type="submit">Generate</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Show Credentials Modal -->
+  <div id="modal-show-credentials" class="modal-overlay">
+    <div class="glass-panel modal-box">
+      <div class="modal-header">
+        <h2>API Key Credentials Generated</h2>
+        <button class="close-btn" onclick="closeModal('show-credentials')">&times;</button>
+      </div>
+      <div style="margin-bottom: 16px;">
+        <p style="color: var(--danger); font-size: 13px; font-weight: 600; margin-bottom: 12px;">⚠️ WARNING: Copy these credentials now. They will not be shown again!</p>
+        <div style="margin-bottom: 12px;">
+          <label style="display: block; margin-bottom: 4px; font-size: 11px; font-weight: 600;">API Key</label>
+          <input type="text" id="cred-api-key" readonly style="width: 100%; background: rgba(0,0,0,0.2);">
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 4px; font-size: 11px; font-weight: 600;">API Secret</label>
+          <input type="text" id="cred-api-secret" readonly style="width: 100%; background: rgba(0,0,0,0.2);">
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end;">
+        <button onclick="closeModal('show-credentials')">Close & Done</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/app.js?v=1.6"></script>
+  <script src="assets/js/dashboard.js?v=1.6"></script>
+  <script src="assets/js/campaigns.js?v=1.6"></script>
+  <script src="assets/js/templates.js?v=1.6"></script>
+  <script src="assets/js/contacts.js?v=1.6"></script>
+  <script src="assets/js/superadmin.js?v=1.6"></script>
+  <script>
+    let campaignPollInterval = null;
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      
+      const tabElement = event ? event.target : document.querySelector(`.nav-tab[onclick*="${tabId}"]`);
+      if (tabElement) tabElement.classList.add('active');
+      
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+
+      // Clear existing campaigns poller
+      if (campaignPollInterval) {
+        clearInterval(campaignPollInterval);
+        campaignPollInterval = null;
+      }
+
+      if (tabId === 'dashboard') loadDashboardStats();
+      if (tabId === 'campaigns') {
+        loadCampaigns();
+        // Start polling every 3 seconds for live progress
+        campaignPollInterval = setInterval(loadCampaigns, 3000);
+      }
+      if (tabId === 'templates') loadTemplates();
+      if (tabId === 'contacts') loadContacts();
+      if (tabId === 'whatsapp') loadSessions();
+      if (tabId === 'superadmin') loadSuperAdminData();
+    }
+
+    function openModal(id) {
+      document.getElementById(`modal-${id}`).classList.add('active');
+    }
+
+    function closeModal(id) {
+      document.getElementById(`modal-${id}`).classList.remove('active');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const userRole = localStorage.getItem('user_role');
+      if (userRole === 'superadmin') {
+        const saTab = document.getElementById('nav-tab-superadmin');
+        if (saTab) saTab.style.display = 'block';
+      }
+    });
+
+    // Modal controllers triggers
+    async function openCreateCampaignModal() {
+      // Load templates and groups options
+      const tempRes = await fetch(`${API_BASE}/templates`, { headers: getHeaders() });
+      const tempData = await tempRes.json();
+      const groupRes = await fetch(`${API_BASE}/contacts/groups`, { headers: getHeaders() });
+      const groupData = await groupRes.json();
+
+      const tempSelect = document.getElementById('campaign-template-select');
+      const groupSelect = document.getElementById('campaign-group-select');
+
+      tempSelect.innerHTML = '';
+      groupSelect.innerHTML = '';
+
+      if (tempData.templates) {
+        tempData.templates.forEach(t => {
+          tempSelect.innerHTML += `<option value="${t.id}">${escapeHtml(t.name)}</option>`;
+        });
+      }
+
+      if (groupData.groups) {
+        groupData.groups.forEach(g => {
+          groupSelect.innerHTML += `<option value="${g.id}">${escapeHtml(g.name)} (${g.total_contacts})</option>`;
+        });
+      }
+
+      openModal('create-campaign');
+    }
+
+    async function submitCampaign(e) {
+      e.preventDefault();
+      const campaign_name = document.getElementById('campaign-name-input').value;
+      const template_id = document.getElementById('campaign-template-select').value;
+      const group_id = document.getElementById('campaign-group-select').value;
+
+      const res = await fetch(`${API_BASE}/campaigns`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ campaign_name, template_id, group_id })
+      });
+
+      if (res.ok) {
+        closeModal('create-campaign');
+        loadCampaigns();
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Failed to queue campaign');
+      }
+    }
+
+    function openCreateTemplateModal() {
+      openModal('create-template');
+    }
+
+    async function submitTemplate(e) {
+      e.preventDefault();
+      const name = document.getElementById('template-name-input').value;
+      const category = document.getElementById('template-category-input').value;
+      const message = document.getElementById('template-message-input').value;
+      const image_url = document.getElementById('template-image-input').value;
+      const imageFile = document.getElementById('template-image-file').files[0];
+
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('category', category);
+      formData.append('message', message);
+      formData.append('image_url', image_url);
+      if (imageFile) {
+        formData.append('image', imageFile);
+      }
+
+      const headers = getHeaders();
+      delete headers['Content-Type'];
+
+      const res = await fetch(`${API_BASE}/templates`, {
+        method: 'POST',
+        headers: headers,
+        body: formData
+      });
+
+      if (res.ok) {
+        closeModal('create-template');
+        document.getElementById('form-create-template').reset();
+        loadTemplates();
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Failed to save template');
+      }
+    }
+
+    async function submitEditTemplate(e) {
+      e.preventDefault();
+      const id = document.getElementById('edit-template-id').value;
+      const name = document.getElementById('edit-template-name-input').value;
+      const category = document.getElementById('edit-template-category-input').value;
+      const message = document.getElementById('edit-template-message-input').value;
+      const image_url = document.getElementById('edit-template-image-input').value;
+      const imageFile = document.getElementById('edit-template-image-file').files[0];
+
+      const formData = new FormData();
+      formData.append('id', id);
+      formData.append('name', name);
+      formData.append('category', category);
+      formData.append('message', message);
+      formData.append('image_url', image_url);
+      if (imageFile) {
+        formData.append('image', imageFile);
+      }
+
+      const headers = getHeaders();
+      delete headers['Content-Type'];
+
+      const res = await fetch(`${API_BASE}/templates/update`, {
+        method: 'POST',
+        headers: headers,
+        body: formData
+      });
+
+      if (res.ok) {
+        closeModal('edit-template');
+        loadTemplates();
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Failed to update template');
+      }
+    }
+
+    async function openUploadModal() {
+      const groupRes = await fetch(`${API_BASE}/contacts/groups`, { headers: getHeaders() });
+      const groupData = await groupRes.json();
+      const groupSelect = document.getElementById('contact-group-select');
+
+      groupSelect.innerHTML = '<option value="">-- Create New Instead --</option>';
+      if (groupData.groups) {
+        groupData.groups.forEach(g => {
+          groupSelect.innerHTML += `<option value="${g.id}">${escapeHtml(g.name)}</option>`;
+        });
+      }
+
+      openModal('upload-contacts');
+    }
+
+    async function submitUpload(e) {
+      e.preventDefault();
+      const fileInput = document.getElementById('contact-file-input');
+      const groupId = document.getElementById('contact-group-select').value;
+      const groupName = document.getElementById('contact-group-name-input').value;
+
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+      if (groupId) formData.append('group_id', groupId);
+      if (groupName) formData.append('group_name', groupName);
+
+      const headers = getHeaders();
+      delete headers['Content-Type']; // Let browser set boundary parameters
+
+      const res = await fetch(`${API_BASE}/contacts/upload`, {
+        method: 'POST',
+        headers: headers,
+        body: formData
+      });
+
+      if (res.ok) {
+        closeModal('upload-contacts');
+        loadContacts();
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Failed to import contacts');
+      }
+    }
+
+    // Sessions display and link helpers
+    async function loadSessions() {
+      try {
+        const res = await fetch(`${API_BASE}/whatsapp/sessions`, { headers: getHeaders() });
+        const data = await res.json();
+        const container = document.getElementById('sessions-list');
+        container.innerHTML = '';
+
+        if (data.sessions) {
+          data.sessions.forEach(s => {
+            const card = document.createElement('div');
+            card.className = 'glass-panel session-card';
+            
+            let qrBlock = '';
+            if (s.status === 'scanning' || s.status === 'pending' || s.status === 'initializing') {
+              // Trigger auto QR poller loop
+              startQRPoller(s.session_id);
+              qrBlock = `
+                <div class="qr-container" id="qr-container-${s.session_id}">
+                  <span style="color: black; font-size: 14px;">Loading QR code...</span>
+                </div>
+              `;
+            } else if (s.status === 'connected') {
+              qrBlock = `
+                <div style="margin: 24px 0; color: var(--success); font-weight: 600;">
+                  ✓ Linked & Connected
+                </div>
+              `;
+            } else {
+              qrBlock = `
+                <button style="margin: 24px 0;" onclick="refreshQR('${s.session_id}')">Generate QR Link</button>
+              `;
+            }
+
+            card.innerHTML = `
+              <h3>${escapeHtml(s.device_name)}</h3>
+              <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">ID: ${s.session_id}</p>
+              <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <span class="badge ${s.status === 'connected' ? 'success' : 'warning'}">${s.status.toUpperCase()}</span>
+                <button class="secondary" style="padding: 4px 8px; font-size: 12px; border-color: red; color: red;" onclick="deleteSession('${s.session_id}')">Delete</button>
+              </div>
+              ${qrBlock}
+            `;
+            container.appendChild(card);
+          });
+        }
+      } catch (err) {
+        console.error('Failed to load session devices:', err);
+      }
+    }
+
+    async function createNewSession() {
+      const deviceName = prompt('Enter a name for this session device:', 'Primary WhatsApp Device');
+      if (!deviceName) return;
+
+      const res = await fetch(`${API_BASE}/whatsapp/sessions`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ device_name: deviceName })
+      });
+
+      if (res.ok) {
+        loadSessions();
+      } else {
+        alert('Failed to initialize session device');
+      }
+    }
+
+    async function deleteSession(sessionId) {
+      if (!confirm('Are you sure you want to delete this session? You will need to link your device again to send messages.')) return;
+      
+      const res = await fetch(`${API_BASE}/whatsapp/sessions`, {
+        method: 'DELETE',
+        headers: getHeaders(),
+        body: JSON.stringify({ session_id: sessionId })
+      });
+
+      if (res.ok) {
+        loadSessions();
+      } else {
+        alert('Failed to delete session');
+      }
+    }
+
+    let qrIntervals = {};
+    function startQRPoller(sessionId) {
+      if (qrIntervals[sessionId]) return;
+      
+      qrIntervals[sessionId] = setInterval(async () => {
+        const res = await fetch(`${API_BASE}/whatsapp/qr?session_id=${sessionId}`, { headers: getHeaders() });
+        const data = await res.json();
+        const container = document.getElementById(`qr-container-${sessionId}`);
+        
+        if (!container) {
+          clearInterval(qrIntervals[sessionId]);
+          delete qrIntervals[sessionId];
+          return;
+        }
+
+        if (data.status === 'connected') {
+          clearInterval(qrIntervals[sessionId]);
+          delete qrIntervals[sessionId];
+          loadSessions();
+        } else if (data.qr_code) {
+          container.innerHTML = `<img src="${data.qr_code}" alt="WhatsApp Connection QR">`;
+        }
+      }, 5000);
+    }
+
+    async function refreshQR(sessionId) {
+      // Just re-poll to trigger generation
+      const res = await fetch(`${API_BASE}/whatsapp/qr?session_id=${sessionId}`, { headers: getHeaders() });
+      loadSessions();
+    }
+  </script>
+</body>
+</html>

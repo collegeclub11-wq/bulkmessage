@@ -12,7 +12,37 @@ class WhatsAppController {
         
         $stmt = $db->prepare("SELECT id, session_id, phone_number, device_name, status, reconnect_attempts, last_connected FROM whatsapp_sessions WHERE tenant_id = ?");
         $stmt->execute([$tenant['id']]);
-        $sessions = $stmt->fetchAll();
+        $sessions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $botUrl = 'https://whatsappbackend-production-9e33.up.railway.app';
+        
+        foreach ($sessions as &$session) {
+            if ($session['status'] === 'connected') {
+                $statusUrl = $botUrl . '/status?sessionId=' . urlencode($session['session_id']);
+                
+                $ch = curl_init($statusUrl);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+                $response = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+                
+                if ($response !== false && $httpCode === 200) {
+                    $data = json_decode($response, true);
+                    if (isset($data['status']) && $data['status'] !== 'connected') {
+                        $newStatus = $data['status'];
+                        if ($newStatus === 'qr_ready') {
+                            $newStatus = 'scanning'; // Match frontend expectations
+                        }
+                        $session['status'] = $newStatus;
+                        $updateStmt = $db->prepare("UPDATE whatsapp_sessions SET status = ? WHERE id = ?");
+                        $updateStmt->execute([$newStatus, $session['id']]);
+                    }
+                }
+            }
+        }
         
         echo json_encode(['sessions' => $sessions]);
     }
